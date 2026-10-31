@@ -69,7 +69,10 @@ export class Solitaire {
 
   // ---------- geometry ----------
   layoutFit() {
-    const v = this.app.fit({ x0: colX(0) - 0.58, x1: colX(6) + 0.58, z0: TOPZ - CARD_H / 2 - 0.06, z1: TABZ + CARD_H / 2 + 3.6 }, 'top');
+    // Room below the deal for long columns (they squeeze to fit what is there). A short landscape screen keeps less,
+    // and its Undo / Hint column sits at the right edge (style.css), so the cards can use the full height.
+    const short = innerWidth > innerHeight && innerHeight < 560;
+    const v = this.app.fit({ x0: colX(0) - 0.58, x1: colX(6) + 0.58, z0: TOPZ - CARD_H / 2 - 0.06, z1: TABZ + CARD_H / 2 + (short ? 1.7 : 3.6) }, 'top', short ? { bottom: 10 } : {});
     this.bottom = v.z1 - CARD_H / 2 - 0.08;
   }
   pos(c) { // resting pose for a card from the logical state

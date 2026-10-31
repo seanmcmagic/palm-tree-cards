@@ -102,7 +102,7 @@ const app = {
     }
     place(hi, target);
     sun.target.position.copy(c).setY(0); sun.position.set(c.x - 5, 14, c.z + 7);
-    needRender = true;
+    needRender = true; return hi; // the camera distance: smaller means the box is bigger on screen
   },
   label(id, text, pos, cls = '') {
     let l = labels.get(id);
@@ -193,9 +193,10 @@ function fitTitle() { // keep the box clear of the menu panel (below it, or left
   const r = $('.title-panel').getBoundingClientRect(), side = r.left > innerWidth * 0.4;
   const m = { tilt: TITLE_TILT, top: 24, bottom: 24, left: 16, right: 16 };
   if (side) m.right = innerWidth - r.left + 24; else m.bottom = innerHeight - r.top + 16;
-  const b = titleBox.bounds(); // beside the panel there is height for the neon sign too; under it, the box comes first
-  if (side) b.expandByPoint(new THREE.Vector3(0, ROOM_TOP, WALL_Z));
-  app.fitBounds(b, m);
+  // Frame the neon sign too when that costs the box less than a fifth of its size; otherwise the box comes first.
+  const box = titleBox.bounds(), dBox = app.fitBounds(box, m);
+  const withSign = box.clone().expandByPoint(new THREE.Vector3(0, ROOM_TOP, WALL_Z));
+  if (app.fitBounds(withSign, m) > dBox * 1.25) app.fitBounds(box, m);
 }
 function syncTitleButtons() {
   $('#soundBtn').textContent = store.settings.sound ? 'Sound on' : 'Sound off';
