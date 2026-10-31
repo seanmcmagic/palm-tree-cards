@@ -244,7 +244,7 @@ function step(now) {
 
 // ---------- boot ----------
 async function boot() {
-  try { await Promise.race([Promise.all(['400 40px "Lilita One"', '400 40px "Yellowtail"', '900 40px "Nunito Sans"'].map((f) => document.fonts.load(f))), new Promise((r) => setTimeout(r, 2500))]); } catch (e) { /* offline: fallbacks */ }
+  try { await Promise.race([Promise.all(['400 40px "Lilita One"', '400 40px "Pacifico"', '900 40px "Nunito Sans"'].map((f) => document.fonts.load(f))), new Promise((r) => setTimeout(r, 2500))]); } catch (e) { /* offline: fallbacks */ }
   await initCards(renderer);
   buildTitle();
   games.sol = new Solitaire(app, $('#solHud')); games.bj = new Blackjack(app, $('#bjHud'));

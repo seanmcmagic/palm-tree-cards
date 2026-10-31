@@ -11,7 +11,7 @@ node serve.mjs            # http://localhost:8160
 
 The server binds to `0.0.0.0`, so the phone and tablet can open `http://<this PC's LAN IP>:8160` on the same Wi-Fi.
 It needs `http://`; opening `index.html` as a file will not load the ES modules. three.js r186.1 is vendored in
-`vendor/three/`, so nothing is fetched except the Google Fonts (Yellowtail, Lilita One, Nunito Sans). Offline, the
+`vendor/three/`, so nothing is fetched except the Google Fonts (Pacifico, Lilita One, Nunito Sans). Offline, the
 fonts fall back to system faces.
 
 ## Controls
@@ -39,27 +39,53 @@ shows them and can reset them.
 
 ## The art, and where my real files go
 
-Everything is drawn procedurally on canvas from the deck's design-system tokens (lagoon `#39979f`, midnight
-`#002a4f`, sunset-gold `#f5c364`, flamingo `#f0909c`, card-white `#fcfcfc`). Pip red (`#d23c4f`) is not a token; it
-was chosen for legibility. The court cards and the Ace of Spades are **placeholders**, not Daniel Schneider's faces or
-the real custom ace.
+Everything is drawn procedurally on canvas. The table, tuck, back, chips and menus use the deck's design-system
+tokens (lagoon `#39979f`, midnight `#002a4f`, sunset-gold `#f5c364`, flamingo `#f0909c`, card-white `#fcfcfc`).
+The script lettering is Pacifico, the deck's typeface.
 
-To use the real art, put PNGs in `art/` and list them in `art/manifest.json`:
+**Faces** follow standard poker-deck conventions, not any particular deck's art: 180° rotational symmetry, corner
+indices top-left and bottom-right, standard pip grids with the lower half inverted, a split line on the courts, and
+the classic red/black/gold/blue palette on card-white. The Ace of Spades carries the palm-and-sun motif. The printed
+deck's courts are Daniel Schneider's licensed redraws; they are **not** copied or traced here. The courts in the
+game are placeholders.
+
+The renderer is data-driven: every position, size and colour lives in `src/faces.js` (inches on a 2.5 × 3.5 in
+card), and `drawFace()` in `src/art.js` only reads it.
+
+**Pip coordinates and sources.** No published USPCC coordinate table turned up. The grid used here is the classic
+double-ended layout, with rows in sixtieths of the pip box (0, 10, 15, 20, 30, 40, 45, 50 and 60) and columns at the
+left, centre and right. It is taken from [dwiddows/pcpips](https://github.com/dwiddows/pcpips) (`draw_pips.py`, MIT).
+Turning the pips below centre upside down gives the standard "7 = five up, two down; 8 = five up, three down"
+orientation that the World of Playing Cards
+[classification of French-suited numeral designs](https://wopc.co.uk/france/classification-of-numeral-card-designs-in-french-suited-packs)
+gives for the modern Anglo-American pattern. Where the pip box sits on the card is our own choice, not a
+measurement from a USPCC deck: x 0.75 to 1.75 in, y 0.74 to 2.76 in, pips 0.43 in. Measure a real card and edit
+`FACE.pipBox` if it should match one exactly.
+
+### Where real art goes
+
+Put the files in `art/` and list them in `art/manifest.json`. Priority runs per-card `faces` first, then `atlas`,
+then procedural:
 
 ```json
 {
   "back": "back.png",
-  "faces": { "AS": "ace_of_spades.png", "KH": "king_of_hearts.png", "QH": "queen_of_hearts.png" }
+  "atlas": { "file": "faces_atlas.png", "suits": ["S", "H", "D", "C"], "ranks": ["J", "Q", "K"] },
+  "faces": { "AS": "ace_of_spades.png" }
 }
 ```
 
-Keys are rank + suit (`A 2-10 J Q K` + `S H D C`). Images should be 5:7 portrait (for example 600×840) with
-transparent rounded corners, since the card mesh alpha-tests the texture. Anything not listed stays procedural.
+- **`atlas`** is the slot for a licensed face set: one image in a grid, with one row per suit (in `suits` order) and
+  one column per rank (in `ranks` order; leave it out for all 13). Each cell is a whole card at 5:7. Give cells a few
+  pixels of transparent margin so mipmaps don't bleed into the neighbouring card.
+- **`faces`** overrides single cards. Keys are rank + suit (`A 2-10 J Q K` + `S H D C`).
+- All images are 5:7 portrait (for example 600×840 per card) with transparent rounded corners, because the card mesh
+  alpha-tests the texture.
 
 ## Files
 
 `src/main.js` scene, camera fitting, input and gamepad · `src/cards.js` card meshes and flip/slide animation ·
-`src/art.js` all procedural art · `src/solitaire.js` · `src/blackjack.js` · `src/audio.js` synthesised sounds ·
+`src/art.js` all procedural art · `src/faces.js` face layout data · `src/solitaire.js` · `src/blackjack.js` · `src/audio.js` synthesised sounds ·
 `src/store.js` saves.
 
 Rendering only happens while something moves, so an idle table costs almost nothing on a phone.

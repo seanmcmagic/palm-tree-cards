@@ -6,7 +6,7 @@ import { tween, ease } from './tween.js';
 import { sfx } from './audio.js';
 
 export const CARD_W = 1, CARD_H = 1.4;
-let aniso = 1, backTex = null, manifest = { back: null, faces: {} };
+let aniso = 1, backTex = null, atlasTex = null, manifest = { back: null, faces: {}, atlas: null };
 const faceTex = new Map(), slotTex = new Map(), loader = new THREE.TextureLoader();
 
 function canvasTex(c) {
@@ -17,13 +17,23 @@ function fileTex(url) { // real art: same 5:7 portrait aspect as the canvases, P
 }
 export async function initCards(renderer) {
   aniso = Math.min(4, renderer.capabilities.getMaxAnisotropy());
-  try { const r = await fetch('art/manifest.json'); if (r.ok) manifest = { back: null, faces: {}, ...(await r.json()) }; } catch (e) { /* procedural only */ }
+  try { const r = await fetch('art/manifest.json'); if (r.ok) manifest = { back: null, faces: {}, atlas: null, ...(await r.json()) }; } catch (e) { /* procedural only */ }
   backTex = manifest.back ? fileTex('art/' + manifest.back) : canvasTex(drawBack());
+  if (manifest.atlas?.file) atlasTex = fileTex('art/' + manifest.atlas.file);
 }
 export const cardKey = (suit, rank) => RANKS[rank - 1] + suit; // e.g. "QH", "10S"
+// Atlas slot: one image, a grid with one row per suit (atlas.suits) and one column per rank (atlas.ranks).
+// Each cell is a whole card at 5:7. Clones share the image, so it is uploaded to the GPU once.
+function atlasCell(suit, rank) {
+  const a = manifest.atlas; if (!atlasTex) return null;
+  const ranks = a.ranks || RANKS, suits = a.suits || SUITS, col = ranks.indexOf(RANKS[rank - 1]), row = suits.indexOf(suit);
+  if (col < 0 || row < 0) return null;
+  const t = atlasTex.clone(); t.repeat.set(1 / ranks.length, 1 / suits.length);
+  t.offset.set(col / ranks.length, 1 - (row + 1) / suits.length); return t;
+}
 export function faceTexture(suit, rank) {
   const k = cardKey(suit, rank);
-  if (!faceTex.has(k)) faceTex.set(k, manifest.faces[k] ? fileTex('art/' + manifest.faces[k]) : canvasTex(drawFace(suit, rank)));
+  if (!faceTex.has(k)) faceTex.set(k, manifest.faces[k] ? fileTex('art/' + manifest.faces[k]) : atlasCell(suit, rank) || canvasTex(drawFace(suit, rank)));
   return faceTex.get(k);
 }
 export function slotTexture(kind) {

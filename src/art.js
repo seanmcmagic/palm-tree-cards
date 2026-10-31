@@ -3,12 +3,12 @@
 export const C = {
   lagoon: '#39979f', lagoonDeep: '#2f7c8b', midnight: '#002a4f', gold: '#f5c364',
   flamingo: '#f0909c', white: '#fcfcfc', raised: '#eef6f6', hairline: '#c9dfe1',
-  red: '#d23c4f', // pip red: not a token, chosen for legibility on card stock
-};
-export const FONT = { script: '"Yellowtail", cursive', display: '"Lilita One", sans-serif', body: '"Nunito Sans", sans-serif' };
+}; // card faces use the standard palette in faces.js instead
+export const FONT = { script: '"Pacifico", cursive', display: '"Lilita One", sans-serif', body: '"Nunito Sans", sans-serif' };
 export const SUITS = ['S', 'H', 'D', 'C'];
 export const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 export const CW = 300, CH = 420, CR = 18; // card canvas size and corner radius
+import { CARD_IN, PALETTE, SUIT_INK, FACE, PIP_GRID, COURTS } from './faces.js';
 
 export function canvas(w, h) {
   const c = document.createElement('canvas'); c.width = w; c.height = h;
@@ -77,40 +77,37 @@ function cardBase(g, fill = C.white) {
   g.lineWidth = 2; g.strokeStyle = C.hairline; g.stroke();
 }
 
-const PIPS = { // [x, y] in a 0..1 pip box; y > .5 drawn upside down
-  1: [[.5, .5]], 2: [[.5, .1], [.5, .9]], 3: [[.5, .1], [.5, .5], [.5, .9]],
-  4: [[0, .1], [1, .1], [0, .9], [1, .9]], 5: [[0, .1], [1, .1], [.5, .5], [0, .9], [1, .9]],
-  6: [[0, .1], [1, .1], [0, .5], [1, .5], [0, .9], [1, .9]],
-  7: [[0, .1], [1, .1], [.5, .3], [0, .5], [1, .5], [0, .9], [1, .9]],
-  8: [[0, .1], [1, .1], [.5, .3], [0, .5], [1, .5], [.5, .7], [0, .9], [1, .9]],
-  9: [[0, .1], [1, .1], [0, .37], [1, .37], [.5, .5], [0, .63], [1, .63], [0, .9], [1, .9]],
-  10: [[0, .1], [1, .1], [.5, .23], [0, .37], [1, .37], [0, .63], [1, .63], [.5, .77], [0, .9], [1, .9]],
-};
+// ---------- faces: everything positional comes from faces.js ----------
+const PX = CW / CARD_IN.w; // canvas pixels per inch (120)
 
 export function drawFace(suit, rank) {
-  const [c, g] = canvas(CW, CH); cardBase(g);
-  const col = suit === 'H' || suit === 'D' ? C.red : C.midnight;
-  const r = RANKS[rank - 1];
-  // indices, top-left and rotated bottom-right
-  const index = () => {
-    g.fillStyle = col; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-    g.font = `900 60px ${FONT.body}`;
-    if (r === '10') { g.save(); g.translate(36, 64); g.scale(0.7, 1); g.fillText(r, 0, 0); g.restore(); }
-    else g.fillText(r, 36, 64);
-    drawSuit(g, suit, 36, 94, 38, col);
-  };
-  index(); g.save(); g.translate(CW, CH); g.rotate(Math.PI); index(); g.restore();
-
+  const [c, g] = canvas(CW, CH); cardBase(g, PALETTE.white);
+  const ink = PALETTE[SUIT_INK[suit]], r = RANKS[rank - 1];
+  const half = (fn) => { fn(); g.save(); g.translate(CW, CH); g.rotate(Math.PI); fn(); g.restore(); }; // 180° symmetry
+  half(() => corner(g, suit, r, ink));
   if (rank === 1) {
-    if (suit === 'S') aceOfSpades(g); else drawSuit(g, suit, CW / 2, CH / 2, 110, col);
-  } else if (rank <= 10) {
-    const bx = 92, bw = CW - 184, by = 66, bh = CH - 132;
-    for (const [px, py] of PIPS[rank]) drawSuit(g, suit, bx + px * bw, by + py * bh, 58, col, py > .5);
-  } else court(g, suit, r, col);
+    if (suit === 'S') aceOfSpades(g); else drawSuit(g, suit, CW / 2, CH / 2, FACE.aceSize * PX, ink);
+  } else if (rank <= 10) pips(g, suit, rank, ink);
+  else court(g, suit, r, ink, half);
   return c;
 }
 
-// Placeholder for the custom Ace of Spades: palm and sun inside a big spade.
+function corner(g, suit, r, ink) {
+  const k = FACE.corner;
+  g.fillStyle = ink; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.font = `900 ${k.rankSize * PX}px ${FONT.body}`;
+  g.save(); g.translate(k.x * PX, k.rankBaseline * PX); if (r === '10') g.scale(k.tenSqueeze, 1); g.fillText(r, 0, 0); g.restore();
+  drawSuit(g, suit, k.x * PX, k.suitY * PX, k.suitSize * PX, ink);
+}
+
+function pips(g, suit, rank, ink) {
+  const b = FACE.pipBox;
+  for (const [col, row] of PIP_GRID[rank]) {
+    const x = (b.x0 + (b.x1 - b.x0) * col) * PX, y = (b.y0 + (b.y1 - b.y0) * row / 60) * PX;
+    drawSuit(g, suit, x, y, FACE.pipSize * PX, ink, row > 30); // below the centre: inverted
+  }
+}
+
+// Custom-feel Ace of Spades: the system's palm and sun inside a big spade.
 function aceOfSpades(g) {
   g.save(); g.translate(CW / 2, CH / 2 + 4); g.scale(200, 200);
   suitPath(g, 'S'); g.fillStyle = C.midnight; g.fill(); g.clip();
@@ -123,25 +120,28 @@ function aceOfSpades(g) {
   g.restore();
 }
 
-// Placeholder court cards (the real ones are Daniel Schneider's): a mirrored sun panel.
-function court(g, suit, r, col) {
-  const x = 66, y = 50, w = CW - 132, h = CH - 100;
-  roundRect(g, x, y, w, h, 10); g.fillStyle = C.raised; g.fill(); g.lineWidth = 4; g.strokeStyle = col; g.stroke();
-  const sun = r === 'K' ? C.gold : r === 'Q' ? C.flamingo : C.lagoon;
-  const half = () => {
-    g.save(); roundRect(g, x, y, w, h / 2, 10); g.clip();
-    g.beginPath(); g.arc(CW / 2, y + h / 2, 92, 0, Math.PI * 2); g.fillStyle = sun; g.fill();
-    g.strokeStyle = C.white; g.lineWidth = 4;
-    for (let k = 0; k < 3; k++) { g.beginPath(); for (let px = x; px <= x + w; px += 4) g.lineTo(px, y + h / 2 - 14 - k * 13 + Math.sin(px / 10) * 3); g.stroke(); }
-    g.fillStyle = C.midnight; g.font = `400 96px ${FONT.display}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-    g.fillText(r, CW / 2, y + h / 2 - 34);
-    drawSuit(g, suit, x + 26, y + 30, 30, col); drawSuit(g, suit, x + w - 26, y + 30, 30, col);
-    g.restore();
-  };
-  half(); g.save(); g.translate(CW, CH); g.rotate(Math.PI); half(); g.restore();
-  g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); g.moveTo(x, y + h / 2); g.lineTo(x + w, y + h / 2); g.stroke();
+// Placeholder courts in the standard palette (not Daniel Schneider's faces): framed, split line, mirrored halves.
+function court(g, suit, r, ink, half) {
+  const k = FACE.court, x = k.inset.x * PX, y = k.inset.y * PX, w = CW - 2 * x, h = CH - 2 * y, P = PALETTE, s = COURTS[r];
+  roundRect(g, x, y, w, h, k.radius * PX); g.fillStyle = P.white; g.fill();
+  g.save(); roundRect(g, x, y, w, h, k.radius * PX); g.clip();
+  half(() => {
+    const top = y, mid = y + h / 2, hh = h / 2;
+    g.fillStyle = P[s.robe]; g.fillRect(x, mid - hh * 0.3, w, hh * 0.3); // robe block against the split line
+    g.fillStyle = P[s.trim]; g.fillRect(x, mid - hh * 0.3, w, hh * 0.05); g.fillRect(x, mid - hh * 0.14, w, hh * 0.03);
+    g.beginPath(); g.moveTo(x + w * 0.2, top + hh * 0.3); // crown / cap band
+    for (let i = 0; i <= 6; i++) g.lineTo(x + w * (0.2 + i * 0.1), top + hh * (i % 2 ? 0.06 : 0.14));
+    g.lineTo(x + w * 0.8, top + hh * 0.24); g.closePath(); g.fillStyle = P[s.band]; g.fill();
+    g.lineWidth = 2; g.strokeStyle = P.black; g.stroke();
+    g.fillStyle = ink; g.font = `400 ${k.letterSize * PX}px ${FONT.display}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(r, x + w / 2, top + hh * 0.52);
+    drawSuit(g, suit, x + k.pipSize * PX * 0.9, top + k.pipSize * PX * 0.9, k.pipSize * PX, ink);
+  });
+  g.restore();
+  g.strokeStyle = ink; g.lineWidth = k.line * PX;
+  roundRect(g, x, y, w, h, k.radius * PX); g.stroke();
+  g.beginPath(); g.moveTo(x, y + h / 2); g.lineTo(x + w, y + h / 2); g.stroke(); // split line
 }
-
 // Two-way back: swirling sunburst around a gold sun, palm in each half, white border.
 export function drawBack() {
   const [c, g] = canvas(CW, CH); cardBase(g);
