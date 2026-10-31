@@ -18,8 +18,10 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, mobile ? 2 : 2));
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene(); scene.background = new THREE.Color(C.lagoon);
 const camera = new THREE.PerspectiveCamera(35, 1, 0.5, 200);
-scene.add(new THREE.AmbientLight(0xffffff, 1.65));
-const sun = new THREE.DirectionalLight(0xfff4e0, 1.55);
+// Neutral white light, summing to ~0.98 on a card lying flat (Lambert divides by pi): printed colours read true.
+// The sun was warm (0xfff4e0), which cut blue to 0.84 and greyed the Winter deck's pale blue and pinks.
+scene.add(new THREE.AmbientLight(0xffffff, 1.75));
+const sun = new THREE.DirectionalLight(0xffffff, 1.55);
 sun.position.set(-5, 14, 7); sun.castShadow = true;
 sun.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048);
 Object.assign(sun.shadow.camera, { left: -13, right: 13, top: 13, bottom: -13, near: 1, far: 40 });
