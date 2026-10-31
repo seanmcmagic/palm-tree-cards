@@ -410,6 +410,22 @@ def concepts():
     return out
 
 
+# Uncut print sheets, framed on the casino wall behind the title table. Only art I own outright: the Original's
+# faces sheet (album #21) is Daniel Schneider's faces and stays off the wall until the licence covers digital use.
+POSTERS = [('original_backs', '20 ', 'Original backs'), ('winter_backs', '10 ', 'Winter backs'), ('winter_faces', '11 ', 'Winter faces')]
+
+
+def posters():
+    out = []
+    for key, prefix, name in POSTERS:
+        img = album(prefix)
+        files = {}
+        for tier, size in (('hi', 1024), ('lo', 512)):
+            files[tier] = save(img.resize((size, size), Image.LANCZOS), ROOT / 'art' / 'room' / f'{key}_{tier}.png')
+        out.append({'id': key, 'name': name, 'files': files, 'aspect': round(img.width / img.height, 4)})
+    return out
+
+
 def boxes():
     out = {}
     for kind, (file, panels) in BOX_PANELS.items():
@@ -426,6 +442,7 @@ def main():
         '_comment': 'Written by tools/build_art.py; see README "Where real art goes".',
         'editions': [original(), winter(), *concepts()],
         'boxes': boxes(),
+        'room': {'posters': posters()},
     }
     (ROOT / 'art' / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
     print('art/manifest.json')

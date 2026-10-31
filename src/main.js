@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { drawTable, C, CW, CH, roundRect, canvas } from './art.js';
 import { initCards, CARD_H, TIER, editions, editionDef, setEdition } from './cards.js';
 import { TitleBox } from './boxes.js';
+import { buildRoom, ROOM_TOP, WALL_Z } from './room.js';
 import { openMusic, closeMusic, musicOpen } from './music.js';
 import { tick } from './tween.js';
 import { unlockAudio, sfx } from './audio.js';
@@ -36,7 +37,7 @@ table.receiveShadow = true; scene.add(table);
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 let needRender = true, current = null, view = { x0: -5, x1: 5, z0: -5, z1: 5 }, lastFit = null;
 const TILT = THREE.MathUtils.degToRad(11), labels = new Map();
-const TITLE_TILT = THREE.MathUtils.degToRad(46); // the title looks into the open box at an angle; the games look down
+const TITLE_TILT = THREE.MathUtils.degToRad(64); // the title looks across at the tuck fronts and the wall; the games look down
 
 const app = {
   scene, camera, store, save, sfx, mobile,
@@ -137,6 +138,7 @@ const titleBox = new TitleBox(app, GAMES);
 async function buildTitle() {
   const kind = new URLSearchParams(location.search).get('box') || (TIER === 'lo' ? 'half' : 'brick');
   await titleBox.build(kind); titleRoot.add(titleBox.root);
+  titleRoot.add(await buildRoom(mobile, () => app.dirty())); // casino night: the wall of uncut sheets behind the table
 }
 // Start a game with a deck: the tuck comes out of the box and opens while the edition's textures load.
 async function launch(gameId, edId = store.settings.deck) {
@@ -179,6 +181,7 @@ function show(which) {
   closeModal();
   $('#title').hidden = which !== 'title'; $('#solHud').hidden = which !== 'sol'; $('#bjHud').hidden = which !== 'bj';
   titleRoot.visible = which === 'title';
+  scene.background.set(which === 'title' ? '#001b33' : C.lagoon); // the title is a night room; games keep the felt colour
   for (const [k, g] of Object.entries(games)) { if (k !== which) g.hide(); }
   app.clearLabels();
   current = which === 'title' ? null : games[which];
@@ -190,7 +193,9 @@ function fitTitle() { // keep the box clear of the menu panel (below it, or left
   const r = $('.title-panel').getBoundingClientRect(), side = r.left > innerWidth * 0.4;
   const m = { tilt: TITLE_TILT, top: 24, bottom: 24, left: 16, right: 16 };
   if (side) m.right = innerWidth - r.left + 24; else m.bottom = innerHeight - r.top + 16;
-  app.fitBounds(titleBox.bounds(), m);
+  const b = titleBox.bounds(); // beside the panel there is height for the neon sign too; under it, the box comes first
+  if (side) b.expandByPoint(new THREE.Vector3(0, ROOM_TOP, WALL_Z));
+  app.fitBounds(b, m);
 }
 function syncTitleButtons() {
   $('#soundBtn').textContent = store.settings.sound ? 'Sound on' : 'Sound off';

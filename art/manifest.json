@@ -1140,5 +1140,36 @@
         ]
       }
     }
+  },
+  "room": {
+    "posters": [
+      {
+        "id": "original_backs",
+        "name": "Original backs",
+        "files": {
+          "hi": "room/original_backs_hi.png",
+          "lo": "room/original_backs_lo.png"
+        },
+        "aspect": 0.8108
+      },
+      {
+        "id": "winter_backs",
+        "name": "Winter backs",
+        "files": {
+          "hi": "room/winter_backs_hi.png",
+          "lo": "room/winter_backs_lo.png"
+        },
+        "aspect": 0.8749
+      },
+      {
+        "id": "winter_faces",
+        "name": "Winter faces",
+        "files": {
+          "hi": "room/winter_faces_hi.png",
+          "lo": "room/winter_faces_lo.png"
+        },
+        "aspect": 0.8749
+      }
+    ]
   }
 }

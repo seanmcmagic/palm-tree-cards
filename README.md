@@ -90,6 +90,13 @@ render (`CONCEPTS` in `tools/build_art.py` lists the corners). Tapping one shows
 each tap adds a vote, kept in `localStorage` (`votes` in `palmtree-cards-v1`) on this device only, a demand test for
 which deck to print next. (The build still designs a matching back for each, in case one becomes playable.)
 
+**Casino night.** The title is a night room (`src/room.js`): a midnight wall with a gold lattice and rail, a neon
+"Palm Tree Casino" sign, marquee bulbs, and my uncut print sheets in gold frames (Original backs, Winter backs,
+Winter faces; built into `art/room/`). The Original faces sheet is Daniel Schneider's faces and stays off the wall
+until the licence covers digital use. Everything in the room is unlit, so it adds no lights. The title camera sits
+lower (64° from straight down) so the tuck fronts read; on wide screens it frames the sign too, and under the menu
+on a phone it keeps the box large with the wall behind.
+
 **Music.** The title's Music button opens a small YouTube player (privacy-enhanced embed) playing four of my songs
 on a loop: Intergalactic Hip Hop, Heartbreak & Romance and Piano Anatomy (The McMagic Mixtape) and It's a Beautiful
 Day, with previous, play/pause, next and the song's title. YouTube's terms want the player visible while it plays, so

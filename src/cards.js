@@ -78,6 +78,7 @@ export async function initCards(renderer, id) {
   ed = await load(editionDef(id)); // waited for, so the first frame already has the real back
 }
 export const manifestBoxes = () => manifest.boxes || {};
+export const manifestRoom = () => manifest.room || {};
 export const jokerTexture = () => ed.joker;
 export const tuckTexture = () => ed.tuck;
 export const backTexture = () => ed.back;

@@ -79,7 +79,7 @@ function openingTuck(art) {
 // kind: 'half' (6 decks) or 'brick' (12 decks). rows x cols of tucks standing side by side, fronts facing +z.
 // The back row stands on a riser so its fronts show over the front row; the lid hinges at the back wall.
 const LAYOUT = { half: { cols: 3 }, brick: { cols: 6 } };
-const GAP = 0.06, WALL = 0.62, RISE = 1.05;
+const GAP = 0.06, WALL = 0.62, RISE = 1.3; // back row raised so its tucks show over the front row from a low camera
 
 function boxGeometry(P, W, D, H) {
   const w = W / 2, d = D / 2;
@@ -184,6 +184,7 @@ export class TitleBox {
   }
   // pointer: which tuck is under it (a game column, or a concept deck)
   pick(cx, cy) {
+    if (!this.picks) return null; // still loading
     const hit = this.app.pick(cx, cy, this.picks); if (!hit) return null;
     if (hit.instanceId == null) { const { r, c } = hit.object.userData; return { r, c, concept: this.concept(r, c).def }; }
     const r = hit.object.userData.row, c = hit.instanceId;
