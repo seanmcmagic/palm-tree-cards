@@ -82,13 +82,12 @@ Blackjack buttons, which use the Deck setting): it lifts out, the lid opens and 
 starts. Each row's tucks are one `InstancedMesh`, so a full brick is two draw calls for the tucks. On the box the lid
 hinges at the back wall so the logo wall faces you; on the dieline it hangs off the logo wall.
 
-**Concept decks ("coming soon").** `art/source/variants/` holds my deck mockups (almost all AI renders). Six concepts
-are in the game, in this order: Spring Edition, Fall Edition, Midnight Edition, White Ornate, Palm Springs and Navy
-Winter. For each, the build script perspective-warps the tuck front out of one render (`CONCEPTS` in
+**Concept decks ("coming soon").** `art/source/variants/` holds my deck mockups (almost all AI renders). Five concepts
+are in the game, in this order: Spring Edition, Fall Edition, Midnight Edition, White Ornate and Navy Winter. For each, the build script perspective-warps the tuck front out of one render (`CONCEPTS` in
 `tools/build_art.py` lists the corners). The renders show no card backs, so each back is designed to match its tuck:
 a white border, the tuck's colour under a fine lattice, a double frame and corner lozenges in its accent colour, and
 an oval medallion holding the tuck's emblem. Faces are the standard ones. They stand in the brick's spare slots, front
-row first (two fit in the half brick, six in the full brick). Tapping one opens a card with Solitaire, Blackjack and
+row first (two fit in the half brick, all five in the full brick). Tapping one opens a card with Solitaire, Blackjack and
 **I'd buy this**; each tap adds a vote, kept in `localStorage` (`votes` in `palmtree-cards-v1`) on this device only,
 a demand test for which deck to print next. The Deck button cycles through concepts too.
 
