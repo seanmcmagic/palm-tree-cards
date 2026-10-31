@@ -1,7 +1,7 @@
 // Palm Tree Cards: scene, camera fitting, input (pointer, keyboard, Gamepad API), screens.
 import * as THREE from 'three';
 import { drawTable, C, CW, CH, roundRect, canvas } from './art.js';
-import { initCards, CARD_H, TIER, editions, editionDef, setEdition } from './cards.js';
+import { initCards, CARD_H, TIER, artUrl, editions, editionDef, setEdition } from './cards.js';
 import { TitleBox } from './boxes.js';
 import { buildRoom, ROOM_TOP, WALL_Z } from './room.js';
 import { openMusic, closeMusic, musicOpen } from './music.js';
@@ -168,7 +168,7 @@ function klondikeModal(edId) {
 function conceptModal(def) {
   const n = store.votes[def.id] || 0, s = def.sheet, tier = s.files[TIER] ? TIER : 'hi', L = s.layouts[tier];
   const col = s.cells.indexOf('tuck') % L.cols; // the tuck cell of its sheet, shown large
-  const tuck = `<div class="concept-tuck" style="background-image:url('art/${s.files[tier]}');background-size:${L.cols * 100}% ${L.rows * 100}%;background-position:${(col / Math.max(1, L.cols - 1)) * 100}% 0"></div>`;
+  const tuck = `<div class="concept-tuck" style="background-image:url('${artUrl(s.files[tier])}');background-size:${L.cols * 100}% ${L.rows * 100}%;background-position:${(col / Math.max(1, L.cols - 1)) * 100}% 0"></div>`;
   app.modal(def.name, `${tuck}<p>A tuck design for a deck I might print next. Would you buy it?</p>
     <p class="votes">♥ ${n} ${n === 1 ? 'vote' : 'votes'} on this device</p>`, [
     { label: "I'd buy this", primary: true, run: () => { store.votes[def.id] = n + 1; save(); sfx.tap(); titleBox.labels(true); app.toast('Thanks! Counted.'); conceptModal(def); } },

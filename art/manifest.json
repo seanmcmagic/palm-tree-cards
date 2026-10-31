@@ -1,5 +1,6 @@
 {
   "_comment": "Written by tools/build_art.py; see README \"Where real art goes\".",
+  "version": "20261030212306",
   "editions": [
     {
       "id": "original",

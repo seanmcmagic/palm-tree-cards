@@ -548,6 +548,7 @@ def main():
             sys.exit(f'missing {need} (art/source is git-ignored; copy the sources in first)')
     manifest = {
         '_comment': 'Written by tools/build_art.py; see README "Where real art goes".',
+        'version': __import__('time').strftime('%Y%m%d%H%M%S'),  # appended to art URLs so browsers fetch a rebuild
         'editions': [original(), winter(), *concepts()],
         'boxes': boxes(),
         'room': {'posters': posters()},

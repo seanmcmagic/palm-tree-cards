@@ -16,13 +16,14 @@ const PROCEDURAL = { id: 'procedural', name: 'Classic', faces: {} };
 function canvasTex(c) {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; return t;
 }
+export const artUrl = (path) => 'art/' + path + (manifest.version ? '?v=' + manifest.version : ''); // new build, new URL
 function fileTex(url) { // a standalone card image: 5:7 portrait, PNG with transparent corners
-  const t = loader.load(url); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; return t;
+  const t = loader.load(artUrl(url.replace(/^art\//, ''))); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; return t;
 }
 // A tiered file pair ({ hi, lo }) loaded and waited for; null if it fails (the caller falls back).
 export async function loadTiered(files) {
   if (!files) return null;
-  try { const t = await loader.loadAsync('art/' + (files[TIER] || files.hi)); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; return t; }
+  try { const t = await loader.loadAsync(artUrl(files[TIER] || files.hi)); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; return t; }
   catch (e) { console.warn('art failed to load; drawing procedurally', files, e); return null; }
 }
 
@@ -74,7 +75,7 @@ export async function setEdition(id) {
 }
 export async function initCards(renderer, id) {
   aniso = Math.min(4, renderer.capabilities.getMaxAnisotropy());
-  try { const r = await fetch('art/manifest.json'); if (r.ok) manifest = { editions: [], boxes: {}, ...(await r.json()) }; } catch (e) { /* procedural only */ }
+  try { const r = await fetch('art/manifest.json', { cache: 'no-store' }); if (r.ok) manifest = { editions: [], boxes: {}, ...(await r.json()) }; } catch (e) { /* procedural only */ }
   ed = await load(editionDef(id)); // waited for, so the first frame already has the real back
 }
 export const manifestBoxes = () => manifest.boxes || {};
