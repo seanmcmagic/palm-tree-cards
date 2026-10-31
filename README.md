@@ -92,11 +92,11 @@ row first (two fit in the half brick, six in the full brick). Tapping one opens 
 **I'd buy this**; each tap adds a vote, kept in `localStorage` (`votes` in `palmtree-cards-v1`) on this device only,
 a demand test for which deck to print next. The Deck button cycles through concepts too.
 
-**Music.** The title's Music button opens a small YouTube player (privacy-enhanced embed) playing my albums, The
-McMagic Mixtape and It's a Beautiful Day, with previous, play/pause, next and an album switch. YouTube's terms want
-the player visible while it plays, so it stays in a 240 x 200 panel; closing the panel pauses it. Albums are listed in
-`MUSIC.albums` in `src/music.js` (a playlist id each); `?music=<playlist id>` plays any playlist for testing. It needs
-an internet connection.
+**Music.** The title's Music button opens a small YouTube player (privacy-enhanced embed) playing four of my songs
+on a loop: Intergalactic Hip Hop, Heartbreak & Romance and Piano Anatomy (The McMagic Mixtape) and It's a Beautiful
+Day, with previous, play/pause, next and the song's title. YouTube's terms want the player visible while it plays, so
+it stays in a 240 x 200 panel; closing the panel pauses it. The set list is `MUSIC.tracks` in `src/music.js` (a
+YouTube video id each); `?music=<playlist id>` plays any playlist for testing. It needs an internet connection.
 
 The Original print file has two identical black Jokers; both lie in Solitaire's spare top-row column and neither
 game deals them. (`uspcc_files/jokers.jpg` is an earlier proof with one red Joker; the print file has none.)

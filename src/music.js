@@ -1,18 +1,18 @@
-// Music: my albums through an embedded YouTube player (IFrame API, privacy-enhanced host). YouTube's terms want
+// Music: my songs through an embedded YouTube player (IFrame API, privacy-enhanced host). YouTube's terms want
 // the player visible while it plays (at least 200 x 200), so it lives in a small panel; closing the panel pauses it.
-// Each album is a YouTube playlist id (the part after list= in its URL). Add more albums to the list; the panel's
-// album button cycles through them. ?music=<list id> plays any playlist instead, for testing.
+// TRACKS is the set list, in order (YouTube video ids); it loops. ?music=<playlist id> plays any playlist instead.
 export const MUSIC = {
   artist: 'Sean McMagic',
-  albums: [
-    { name: 'The McMagic Mixtape', list: 'OLAK5uy_ldv0iOTRLvnJpqQRwsh1S9ldAD-SSKJIg' },
-    { name: "It's a Beautiful Day", list: 'OLAK5uy_kYRs41pDxjGLaFxSp9kZfh1TzLq8l-Bh8' },
+  tracks: [
+    { title: 'Intergalactic Hip Hop', id: 'P5vhge2Qax4' },   // The McMagic Mixtape
+    { title: 'Heartbreak & Romance', id: 'NFKjEk_Cc3I' },     // The McMagic Mixtape
+    { title: 'Piano Anatomy', id: 'XDciGzC5PDI' },            // The McMagic Mixtape
+    { title: "It's a Beautiful Day", id: 'F4JfK-YA9ZE' },     // It's a Beautiful Day
   ],
 };
 
-let player = null, ready = null, panel = null, album = 0;
+let player = null, ready = null, panel = null;
 const override = () => new URLSearchParams(location.search).get('music');
-const albums = () => (override() ? [{ name: 'Playlist', list: override() }] : MUSIC.albums);
 
 function loadApi() {
   if (ready) return ready;
@@ -28,46 +28,41 @@ function loadApi() {
 function build() {
   panel = document.createElement('div'); panel.id = 'music'; panel.className = 'panel music-panel'; panel.hidden = true;
   panel.innerHTML = `<div class="music-head"><b>${MUSIC.artist}</b><span class="music-btns">
-      <button class="btn sm" data-m="prev" aria-label="Previous track">⏮</button>
+      <button class="btn sm" data-m="prev" aria-label="Previous song">⏮</button>
       <button class="btn sm" data-m="toggle" aria-label="Play or pause">⏯</button>
-      <button class="btn sm" data-m="next" aria-label="Next track">⏭</button>
+      <button class="btn sm" data-m="next" aria-label="Next song">⏭</button>
       <button class="btn sm" data-m="close" aria-label="Close music">✕</button></span></div>
-    <button class="btn sm music-album" data-m="album"></button>
-    <div class="music-frame"><div id="ytPlayer"></div><p class="music-empty" hidden>Add an album to <code>MUSIC.albums</code> in <code>src/music.js</code>.</p></div>`;
+    <p class="music-now">&nbsp;</p>
+    <div class="music-frame"><div id="ytPlayer"></div></div>`;
   document.body.append(panel);
   panel.addEventListener('click', (e) => {
     const b = e.target.closest('[data-m]'); if (!b) return;
     const a = b.dataset.m;
     if (a === 'close') return closeMusic();
-    if (a === 'album') return nextAlbum();
     if (!player?.getPlayerState) return;
     if (a === 'toggle') player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo();
     else if (a === 'next') player.nextVideo();
     else if (a === 'prev') player.previousVideo();
   });
 }
-function label() {
-  const list = albums(), b = panel.querySelector('.music-album');
-  b.textContent = list.length ? `Album: ${list[album].name}${list.length > 1 ? '  ›' : ''}` : 'No album';
-  b.disabled = list.length < 2;
-}
-function nextAlbum() {
-  const list = albums(); if (list.length < 2) return;
-  album = (album + 1) % list.length; label();
-  player?.loadPlaylist?.({ listType: 'playlist', list: list[album].list, index: 0 }); // index is needed, or it keeps the old track
+function nowPlaying() { // the song title from my list (YouTube's own title as a fallback)
+  const d = player?.getVideoData?.(); if (!d) return;
+  const t = MUSIC.tracks.find((x) => x.id === d.video_id)?.title || d.title || '';
+  panel.querySelector('.music-now').textContent = t ? `♪ ${t}` : ' ';
 }
 
 export async function openMusic(app) {
   if (!panel) build();
-  panel.hidden = false; label();
-  const list = albums();
-  panel.querySelector('.music-empty').hidden = list.length > 0; if (!list.length) return;
+  panel.hidden = false;
   if (player) { player.playVideo?.(); return; }
   try {
-    const YT = await loadApi();
+    const YT = await loadApi(), list = override(), ids = MUSIC.tracks.map((t) => t.id);
     player = new YT.Player('ytPlayer', {
       host: 'https://www.youtube-nocookie.com', width: 240, height: 200,
-      playerVars: { listType: 'playlist', list: list[album].list, playsinline: 1, rel: 0, autoplay: 1 },
+      playerVars: list ? { listType: 'playlist', list, playsinline: 1, rel: 0, autoplay: 1 }
+        : { playlist: ids.join(','), loop: 1, playsinline: 1, rel: 0, autoplay: 1 },
+      videoId: list ? undefined : ids[0],
+      events: { onStateChange: nowPlaying, onReady: nowPlaying },
     });
   } catch (e) { app?.toast('Music needs an internet connection'); }
 }
