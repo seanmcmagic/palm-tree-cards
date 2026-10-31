@@ -1,13 +1,321 @@
 {
-  "sheet": {
-    "files": { "hi": "deck_hi.png", "lo": "deck_lo.png" },
-    "cell": [512, 1024],
-    "gutter": 8,
-    "cells": ["back", "AS", "JK", "tuck"]
-  },
-  "back": "sheet:back",
-  "joker": "sheet:JK",
-  "tuck": "sheet:tuck",
-  "atlas": null,
-  "faces": { "AS": "sheet:AS" }
+  "_comment": "Written by tools/build_art.py; see README \"Where real art goes\".",
+  "editions": [
+    {
+      "id": "original",
+      "name": "Original",
+      "sheet": {
+        "files": {
+          "hi": "original/sheet_hi.png",
+          "lo": "original/sheet_lo.png"
+        },
+        "layouts": {
+          "hi": {
+            "cell": [
+              512,
+              1024
+            ],
+            "gutter": 8,
+            "cols": 4,
+            "rows": 1
+          },
+          "lo": {
+            "cell": [
+              256,
+              512
+            ],
+            "gutter": 4,
+            "cols": 4,
+            "rows": 1
+          }
+        },
+        "cells": [
+          "back",
+          "AS",
+          "JK",
+          "tuck"
+        ]
+      },
+      "back": "sheet:back",
+      "joker": "sheet:JK",
+      "faces": {
+        "AS": "sheet:AS"
+      },
+      "atlas": null,
+      "tuck": {
+        "front": "sheet:tuck",
+        "die": {
+          "files": {
+            "hi": "original/tuck_hi.png",
+            "lo": "original/tuck_lo.png"
+          },
+          "panels": {
+            "front": [
+              0.10317,
+              0.24818,
+              0.50041,
+              0.88412
+            ],
+            "left": [
+              0.0,
+              0.24818,
+              0.10317,
+              0.88412
+            ],
+            "right": [
+              0.50041,
+              0.24818,
+              0.60276,
+              0.88412
+            ],
+            "back": [
+              0.60276,
+              0.24818,
+              1.0,
+              0.88412
+            ],
+            "top": [
+              0.10317,
+              0.13321,
+              0.50041,
+              0.24818
+            ],
+            "tongue": [
+              0.10317,
+              0.0,
+              0.50041,
+              0.13321
+            ],
+            "bottom": [
+              0.60276,
+              0.88412,
+              1.0,
+              1.0
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "winter",
+      "name": "Winter",
+      "sheet": {
+        "files": {
+          "hi": "winter/sheet_hi.png",
+          "lo": "winter/sheet_lo.png"
+        },
+        "layouts": {
+          "hi": {
+            "cell": [
+              256,
+              512
+            ],
+            "gutter": 6,
+            "cols": 16,
+            "rows": 4
+          },
+          "lo": {
+            "cell": [
+              256,
+              256
+            ],
+            "gutter": 4,
+            "cols": 8,
+            "rows": 8
+          }
+        },
+        "cells": [
+          "back",
+          "tuck",
+          "AS",
+          "2S",
+          "3S",
+          "4S",
+          "5S",
+          "6S",
+          "7S",
+          "8S",
+          "9S",
+          "10S",
+          "JS",
+          "QS",
+          "KS",
+          "AH",
+          "2H",
+          "3H",
+          "4H",
+          "5H",
+          "6H",
+          "7H",
+          "8H",
+          "9H",
+          "10H",
+          "JH",
+          "QH",
+          "KH",
+          "AD",
+          "2D",
+          "3D",
+          "4D",
+          "5D",
+          "6D",
+          "7D",
+          "8D",
+          "9D",
+          "10D",
+          "JD",
+          "QD",
+          "KD",
+          "AC",
+          "2C",
+          "3C",
+          "4C",
+          "5C",
+          "6C",
+          "7C",
+          "8C",
+          "9C",
+          "10C",
+          "JC",
+          "QC",
+          "KC"
+        ]
+      },
+      "back": "sheet:back",
+      "joker": null,
+      "faces": "sheet",
+      "atlas": null,
+      "tuck": {
+        "front": "sheet:tuck",
+        "die": {
+          "files": {
+            "hi": "winter/tuck_hi.png",
+            "lo": "winter/tuck_lo.png"
+          },
+          "panels": {
+            "front": [
+              0.11064,
+              0.25131,
+              0.5,
+              0.88185
+            ],
+            "left": [
+              0.0,
+              0.25131,
+              0.11064,
+              0.88185
+            ],
+            "right": [
+              0.5,
+              0.25131,
+              0.61064,
+              0.88185
+            ],
+            "back": [
+              0.61064,
+              0.25131,
+              1.0,
+              0.88185
+            ],
+            "top": [
+              0.11064,
+              0.14042,
+              0.5,
+              0.25131
+            ],
+            "tongue": [
+              0.11064,
+              0.0,
+              0.5,
+              0.14042
+            ],
+            "bottom": [
+              0.61064,
+              0.88185,
+              1.0,
+              1.0
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "boxes": {
+    "half": {
+      "files": {
+        "hi": "box/half_hi.png",
+        "lo": "box/half_lo.png"
+      },
+      "panels": {
+        "front": [
+          0.50082,
+          0.55118,
+          0.79475,
+          1.0
+        ],
+        "back": [
+          0.0,
+          0.55118,
+          0.29392,
+          1.0
+        ],
+        "left": [
+          0.29392,
+          0.55118,
+          0.50082,
+          1.0
+        ],
+        "right": [
+          0.79475,
+          0.55118,
+          1.0,
+          1.0
+        ],
+        "lid": [
+          0.50082,
+          0.0,
+          0.79475,
+          0.55118
+        ]
+      }
+    },
+    "brick": {
+      "files": {
+        "hi": "box/brick_hi.png",
+        "lo": "box/brick_lo.png"
+      },
+      "panels": {
+        "front": [
+          0.49921,
+          0.58879,
+          0.83943,
+          1.0
+        ],
+        "back": [
+          0.0,
+          0.58879,
+          0.34022,
+          1.0
+        ],
+        "left": [
+          0.34022,
+          0.58879,
+          0.49921,
+          1.0
+        ],
+        "right": [
+          0.83943,
+          0.58879,
+          1.0,
+          1.0
+        ],
+        "lid": [
+          0.49921,
+          0.0,
+          0.83943,
+          0.58879
+        ]
+      }
+    }
+  }
 }

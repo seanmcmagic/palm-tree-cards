@@ -1,7 +1,8 @@
 // Palm Tree Cards: scene, camera fitting, input (pointer, keyboard, Gamepad API), screens.
 import * as THREE from 'three';
 import { drawTable, C, CW, CH, roundRect, canvas } from './art.js';
-import { initCards, Card, CARD_H, jokerCard, tuckTexture } from './cards.js';
+import { initCards, CARD_H, TIER, editions, editionDef, setEdition } from './cards.js';
+import { TitleBox } from './boxes.js';
 import { tick } from './tween.js';
 import { unlockAudio, sfx } from './audio.js';
 import { store, save, resetStats } from './store.js';
@@ -32,6 +33,7 @@ table.receiveShadow = true; scene.add(table);
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 let needRender = true, current = null, view = { x0: -5, x1: 5, z0: -5, z1: 5 }, lastFit = null;
 const TILT = THREE.MathUtils.degToRad(11), labels = new Map();
+const TITLE_TILT = THREE.MathUtils.degToRad(46); // the title looks into the open box at an angle; the games look down
 
 const app = {
   scene, camera, store, save, sfx, mobile,
@@ -50,8 +52,9 @@ const app = {
     const cx = (rect.x0 + rect.x1) / 2, cz = (rect.z0 + rect.z1) / 2;
     const top = 1 - 2 * ((m.top ?? 60) + safe('t')) / innerHeight, bot = -1 + 2 * ((m.bottom ?? 78) + safe('b')) / innerHeight;
     const hit = (nx, ny) => { ray.setFromCamera(ndc.set(nx, ny), camera); return ray.ray.intersectPlane(plane.set(plane.normal, 0), new THREE.Vector3()); };
+    const tilt = m.tilt ?? TILT;
     const place = (d, oz) => {
-      camera.position.set(cx, Math.cos(TILT) * d, cz + oz + Math.sin(TILT) * d); camera.lookAt(cx, 0, cz + oz); camera.updateMatrixWorld();
+      camera.position.set(cx, Math.cos(tilt) * d, cz + oz + Math.sin(tilt) * d); camera.lookAt(cx, 0, cz + oz); camera.updateMatrixWorld();
     };
     let lo = 2, hi = 120;
     for (let i = 0; i < 28; i++) {
@@ -69,6 +72,33 @@ const app = {
     view = { x0: bl.x, x1: br.x, z0: t.z, z1: b.z };
     sun.target.position.set(cx, 0, cz + oz); sun.position.set(cx - 5, 14, cz + oz + 7);
     needRender = true; return view;
+  },
+  // Fit a 3D box (THREE.Box3) into a screen band (margins in px), looking down at m.tilt. For the title, where
+  // the standing tucks are tall enough that a ground rectangle doesn't describe what must stay in view.
+  fitBounds(box, m = {}) {
+    lastFit = null;
+    const tilt = m.tilt ?? TILT, c = box.getCenter(new THREE.Vector3()), dir = new THREE.Vector3(0, Math.cos(tilt), Math.sin(tilt));
+    const l = -1 + 2 * (m.left ?? 16) / innerWidth, r = 1 - 2 * (m.right ?? 16) / innerWidth;
+    const t = 1 - 2 * ((m.top ?? 16) + safe('t')) / innerHeight, b = -1 + 2 * ((m.bottom ?? 16) + safe('b')) / innerHeight;
+    const pts = []; for (let i = 0; i < 8; i++) pts.push(new THREE.Vector3(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z));
+    const proj = () => { const q = pts.map((p) => p.clone().project(camera)); return [Math.min(...q.map((p) => p.x)), Math.max(...q.map((p) => p.x)), Math.min(...q.map((p) => p.y)), Math.max(...q.map((p) => p.y))]; };
+    const place = (d, target) => { camera.position.copy(target).addScaledVector(dir, d); camera.lookAt(target); camera.updateMatrixWorld(); };
+    let lo = 1, hi = 120;
+    for (let i = 0; i < 28; i++) {
+      const d = (lo + hi) / 2; place(d, c); const [x0, x1, y0, y1] = proj();
+      if (x1 - x0 <= r - l && y1 - y0 <= t - b) hi = d; else lo = d;
+    }
+    // slide the camera so the projected box sits in the middle of the band
+    const target = c.clone(), right = new THREE.Vector3(), up = new THREE.Vector3();
+    for (let k = 0; k < 3; k++) {
+      place(hi, target); const [x0, x1, y0, y1] = proj();
+      const halfH = hi * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), halfW = halfH * camera.aspect;
+      camera.matrixWorld.extractBasis(right, up, new THREE.Vector3());
+      target.addScaledVector(right, ((x0 + x1) / 2 - (l + r) / 2) * halfW).addScaledVector(up, ((y0 + y1) / 2 - (t + b) / 2) * halfH);
+    }
+    place(hi, target);
+    sun.target.position.copy(c).setY(0); sun.position.set(c.x - 5, 14, c.z + 7);
+    needRender = true;
   },
   label(id, text, pos, cls = '') {
     let l = labels.get(id);
@@ -96,19 +126,23 @@ const safe = (s) => parseFloat(getComputedStyle(document.documentElement).getPro
 function closeModal() { $('#modal').hidden = true; }
 
 // ---------- title scene ----------
+// An open brick box of tucks: a row per edition, a column per game (later columns are spare decks). Phones get
+// the half brick (3 columns), everything else the full brick (6); ?box=half or ?box=brick forces one.
+const GAMES = [{ id: 'sol', name: 'Solitaire' }, { id: 'bj', name: 'Blackjack' }];
 const titleRoot = new THREE.Group(); scene.add(titleRoot);
-function buildTitle() {
-  const side = new THREE.MeshLambertMaterial({ color: C.midnight });
-  const tuck = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.36, 1.56), [side, side, new THREE.MeshLambertMaterial({ map: tuckTexture() }), side, side, side]);
-  tuck.position.set(-1.6, 0.18, 0.2); tuck.rotation.y = 0.22; tuck.castShadow = tuck.receiveShadow = true; titleRoot.add(tuck);
-  const fan = [['S', 1], ['H', 13], ['D', 12], ['C', 11], ['S', 10]];
-  fan.forEach(([s, r], i) => {
-    const c = new Card(s, r); c.setFace(true); const a = (i - 2) * 0.22;
-    c.place(1.1 + Math.sin(a) * 1.3, 0.01 + i * 0.006, 0.6 - Math.cos(a) * 1.3 + 1.0, -a); titleRoot.add(c.group);
-  });
-  const j = jokerCard(); j.place(-0.1, 0.004, 1.3, 0.5); titleRoot.add(j.group);
+const titleBox = new TitleBox(app, GAMES);
+async function buildTitle() {
+  const kind = new URLSearchParams(location.search).get('box') || (TIER === 'lo' ? 'half' : 'brick');
+  await titleBox.build(kind); titleRoot.add(titleBox.root);
 }
-
+// Start a game with a deck: the tuck comes out of the box and opens while the edition's textures load.
+async function launch(gameId, edId = store.settings.deck) {
+  if (titleBox.busy || $('#title').hidden) return;
+  const r = Math.max(0, editions().findIndex((e) => e.id === edId)), c = GAMES.findIndex((g) => g.id === gameId);
+  store.settings.deck = editionDef(edId).id; save(); syncTitleButtons();
+  await titleBox.open(r, c, setEdition(store.settings.deck));
+  show(gameId); titleBox.reset();
+}
 // ---------- screens ----------
 const games = {};
 function show(which) {
@@ -118,18 +152,20 @@ function show(which) {
   for (const [k, g] of Object.entries(games)) { if (k !== which) g.hide(); }
   app.clearLabels();
   current = which === 'title' ? null : games[which];
-  if (current) current.show(); else fitTitle();
+  if (current) current.show(); else { titleBox.reset(); fitTitle(); titleBox.labels(true); }
   syncTitleButtons(); clearFocus(); if (usingPad && which !== 'sol') focusFirst(); needRender = true;
 }
-function fitTitle() { // keep the tuck and fan clear of the menu panel (below it, or left of it in short landscape)
+function fitTitle() { // keep the box clear of the menu panel (below it, or left of it in short landscape)
+  if (!titleBox.W) return; // still loading: boot fits once the box is built
   const r = $('.title-panel').getBoundingClientRect(), side = r.left > innerWidth * 0.4;
-  const rect = { x0: -2.6, x1: 2.9, z0: -1.1, z1: 2.9 };
-  if (side) { const shift = (r.width + 40) / innerWidth; rect.x1 += (rect.x1 - rect.x0) * shift / (1 - shift) * 1.1; app.fit(rect, 'center', { top: 20, bottom: 20 }); }
-  else app.fit(rect, 'center', { top: 20 + safe('t'), bottom: innerHeight - r.top + 16 });
+  const m = { tilt: TITLE_TILT, top: 24, bottom: 24, left: 16, right: 16 };
+  if (side) m.right = innerWidth - r.left + 24; else m.bottom = innerHeight - r.top + 16;
+  app.fitBounds(titleBox.bounds(), m);
 }
 function syncTitleButtons() {
   $('#drawModeBtn').textContent = `Draw ${store.settings.draw}`;
   $('#soundBtn').textContent = store.settings.sound ? 'Sound on' : 'Sound off';
+  $('#deckBtn').textContent = `Deck: ${editionDef(store.settings.deck).name}`;
 }
 function statsHtml() {
   const s = store.sol, b = store.bj, pct = (w, p) => (p ? Math.round((w / p) * 100) + '%' : '–');
@@ -144,8 +180,12 @@ function statsHtml() {
     <tr><td>Blackjacks</td><td>${b.blackjacks}</td></tr><tr><td>Rebuys</td><td>${b.rebuys}</td></tr></table>`;
 }
 function titleAction(act) {
-  if (act === 'solitaire') show('sol');
-  else if (act === 'blackjack') show('bj');
+  if (act === 'solitaire') launch('sol');
+  else if (act === 'blackjack') launch('bj');
+  else if (act === 'deck') { // cycle editions; a game in progress switches look too
+    const eds = editions(), i = eds.findIndex((e) => e.id === store.settings.deck);
+    store.settings.deck = eds[(i + 1) % eds.length].id; save(); syncTitleButtons(); setEdition(store.settings.deck); sfx.tap();
+  }
   else if (act === 'drawmode') { store.settings.draw = store.settings.draw === 1 ? 3 : 1; save(); syncTitleButtons(); app.toast(`Solitaire: draw ${store.settings.draw} (from the next deal)`); }
   else if (act === 'sound') { store.settings.sound = !store.settings.sound; save(); syncTitleButtons(); sfx.tap(); }
   else if (act === 'stats') app.modal('Stats', statsHtml(), [
@@ -162,8 +202,15 @@ document.addEventListener('click', (e) => {
 
 // ---------- pointer ----------
 const cv = $('#gl');
-cv.addEventListener('pointerdown', (e) => { unlockAudio(); clearFocus(); usingPad = false; if (!$('#modal').hidden) return; cv.setPointerCapture(e.pointerId); current?.pointerDown?.(e); });
-cv.addEventListener('pointermove', (e) => current?.pointerMove?.(e));
+cv.addEventListener('pointerdown', (e) => {
+  unlockAudio(); clearFocus(); usingPad = false; if (!$('#modal').hidden) return;
+  if (!current) { const h = titleBox.pick(e.clientX, e.clientY); if (h) launch(GAMES[h.c].id, editions()[h.r].id); return; }
+  cv.setPointerCapture(e.pointerId); current.pointerDown?.(e);
+});
+cv.addEventListener('pointermove', (e) => {
+  if (current) return current.pointerMove?.(e);
+  if (e.pointerType === 'mouse' && !$('#title').hidden && $('#modal').hidden) titleBox.setHover(titleBox.pick(e.clientX, e.clientY));
+});
 cv.addEventListener('pointerup', (e) => current?.pointerUp?.(e));
 cv.addEventListener('pointercancel', (e) => current?.pointerUp?.(e, true));
 cv.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -244,11 +291,11 @@ function step(now) {
 // ---------- boot ----------
 async function boot() {
   try { await Promise.race([Promise.all(['400 40px "Lilita One"', '400 40px "Pacifico"', '900 40px "Nunito Sans"'].map((f) => document.fonts.load(f))), new Promise((r) => setTimeout(r, 2500))]); } catch (e) { /* offline: fallbacks */ }
-  await initCards(renderer);
-  buildTitle();
+  await initCards(renderer, store.settings.deck);
+  await buildTitle();
   games.sol = new Solitaire(app, $('#solHud')); games.bj = new Blackjack(app, $('#bjHud'));
   for (const g of Object.values(games)) scene.add(g.root);
   resize(); show('title'); requestAnimationFrame(frame);
-  window.__palm = { app, games, store, step: () => step(performance.now()) }; // playtest hook (step drives frames in a hidden tab)
+  window.__palm = { app, games, store, titleBox, step: () => step(performance.now()) }; // playtest hook (step drives frames in a hidden tab)
 }
 boot();

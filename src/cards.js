@@ -1,58 +1,91 @@
 // Card meshes: two alpha-tested planes back to back inside a flipper group.
-// Textures are procedural unless art/manifest.json names a real file (or a "sheet:" cell) for that slot.
+// Art comes from editions in art/manifest.json (written by tools/build_art.py). Each edition is one deck: a back,
+// faces, an optional Joker and a tuck. Anything an edition leaves out is drawn procedurally.
 import * as THREE from 'three';
 import { drawFace, drawBack, drawSlot, drawJoker, drawTuck, SUITS, RANKS } from './art.js';
 import { tween, ease } from './tween.js';
 import { sfx } from './audio.js';
 
 export const CARD_W = 1, CARD_H = 1.4;
-let aniso = 1, backTex = null, atlasTex = null, sheetTex = null, manifest = { back: null, faces: {}, atlas: null };
-const faceTex = new Map(), slotTex = new Map(), loader = new THREE.TextureLoader();
-// Texture tier: phones get the half-size sheet. ?tier=lo or ?tier=hi forces one.
-const TIER = new URLSearchParams(location.search).get('tier') || (matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 700 ? 'lo' : 'hi');
+let aniso = 1, manifest = { editions: [], boxes: {} }, ed = null; // ed: the live edition's runtime state
+const slotTex = new Map(), loader = new THREE.TextureLoader(), states = new Map(), live = new Set(), listeners = new Set();
+// Texture tier: phones get the half-size files. ?tier=lo or ?tier=hi forces one.
+export const TIER = new URLSearchParams(location.search).get('tier') || (matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 700 ? 'lo' : 'hi');
+const PROCEDURAL = { id: 'procedural', name: 'Classic', faces: {} };
 
 function canvasTex(c) {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; return t;
 }
-function fileTex(url) { // real art: same 5:7 portrait aspect as the canvases, PNG with transparent corners
+function fileTex(url) { // a standalone card image: 5:7 portrait, PNG with transparent corners
   const t = loader.load(url); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; return t;
 }
-// Sheet: one power-of-two image, a single row of equal cells (sheet.cells, in order), each with a gutter
-// of sheet.gutter pixels (of sheet.cell) that the UVs skip so mip levels don't bleed between cells.
-function sheetCell(name) {
-  const s = manifest.sheet, i = s?.cells?.indexOf(name) ?? -1; if (!sheetTex || i < 0) return null;
-  const [cw, ch] = s.cell, n = s.cells.length, g = s.gutter || 0, t = sheetTex.clone();
-  t.repeat.set((cw - 2 * g) / (cw * n), (ch - 2 * g) / ch); t.offset.set((i * cw + g) / (cw * n), g / ch); return t;
+// A tiered file pair ({ hi, lo }) loaded and waited for; null if it fails (the caller falls back).
+export async function loadTiered(files) {
+  if (!files) return null;
+  try { const t = await loader.loadAsync('art/' + (files[TIER] || files.hi)); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; return t; }
+  catch (e) { console.warn('art failed to load; drawing procedurally', files, e); return null; }
 }
-function artTex(ref, fallback) { // a manifest value: "sheet:<cell>", a file in art/, or nothing (procedural)
-  if (ref?.startsWith('sheet:')) return sheetCell(ref.slice(6)) || fallback();
+
+// ---------- editions ----------
+export const editions = () => (manifest.editions.length ? manifest.editions : [PROCEDURAL]);
+export const edition = () => ed.def;
+export const editionDef = (id) => editions().find((e) => e.id === id) || editions()[0];
+export function onEdition(fn) { listeners.add(fn); return () => listeners.delete(fn); }
+
+// Sheet: a power-of-two grid of equal cells (sheet.cells in reading order), each with a gutter of `gutter` pixels
+// (of `cell`) that the UVs skip so mip levels don't bleed between cells. Each tier can have its own grid
+// (sheet.layouts.hi / .lo); a sheet without layouts is one row in its own units.
+function sheetCell(st, name) {
+  const s = st.def.sheet, i = s?.cells?.indexOf(name) ?? -1; if (!st.sheet || i < 0) return null;
+  const L = s.layouts?.[st.tier] || s.layouts?.hi || s, t = st.sheet.clone();
+  const [cw, ch] = L.cell, cols = L.cols || s.cells.length, rows = L.rows || 1, g = L.gutter || 0;
+  const col = i % cols, row = Math.floor(i / cols);
+  t.repeat.set((cw - 2 * g) / (cw * cols), (ch - 2 * g) / (ch * rows));
+  t.offset.set((col * cw + g) / (cw * cols), 1 - ((row + 1) * ch - g) / (ch * rows)); return t;
+}
+function artTex(st, ref, fallback) { // a manifest value: "sheet:<cell>", a file in art/, or nothing (procedural)
+  if (ref?.startsWith('sheet:')) return sheetCell(st, ref.slice(6)) || fallback();
   return ref ? fileTex('art/' + ref) : fallback();
 }
-export async function initCards(renderer) {
-  aniso = Math.min(4, renderer.capabilities.getMaxAnisotropy());
-  try { const r = await fetch('art/manifest.json'); if (r.ok) manifest = { back: null, faces: {}, atlas: null, ...(await r.json()) }; } catch (e) { /* procedural only */ }
-  const sf = manifest.sheet?.files; // waited for, so the first frame already has the real back
-  if (sf) try { sheetTex = await loader.loadAsync('art/' + (sf[TIER] || sf.hi)); sheetTex.colorSpace = THREE.SRGBColorSpace; sheetTex.anisotropy = aniso; } catch (e) { console.warn('art sheet failed to load; drawing procedurally', e); }
-  backTex = artTex(manifest.back, () => canvasTex(drawBack()));
-  if (manifest.atlas?.file) atlasTex = fileTex('art/' + manifest.atlas.file);
-}
-let jokerTex = null, tuckTex = null;
-export const jokerTexture = () => (jokerTex ??= artTex(manifest.joker, () => canvasTex(drawJoker())));
-export const tuckTexture = () => (tuckTex ??= artTex(manifest.tuck, () => canvasTex(drawTuck())));
-export const cardKey = (suit, rank) => RANKS[rank - 1] + suit; // e.g. "QH", "10S"
 // Atlas slot: one image, a grid with one row per suit (atlas.suits) and one column per rank (atlas.ranks).
 // Each cell is a whole card at 5:7. Clones share the image, so it is uploaded to the GPU once.
-function atlasCell(suit, rank) {
-  const a = manifest.atlas; if (!atlasTex) return null;
+function atlasCell(st, suit, rank) {
+  const a = st.def.atlas; if (!st.atlas) return null;
   const ranks = a.ranks || RANKS, suits = a.suits || SUITS, col = ranks.indexOf(RANKS[rank - 1]), row = suits.indexOf(suit);
   if (col < 0 || row < 0) return null;
-  const t = atlasTex.clone(); t.repeat.set(1 / ranks.length, 1 / suits.length);
+  const t = st.atlas.clone(); t.repeat.set(1 / ranks.length, 1 / suits.length);
   t.offset.set(col / ranks.length, 1 - (row + 1) / suits.length); return t;
 }
+async function load(def) { // an edition's textures, loaded once and kept (switching back is instant)
+  if (states.has(def.id)) return states.get(def.id);
+  const files = def.sheet?.files, tier = files?.[TIER] ? TIER : 'hi';
+  const st = { def, tier, sheet: await loadTiered(files), atlas: def.atlas?.file ? fileTex('art/' + def.atlas.file) : null, faces: new Map() };
+  st.back = artTex(st, def.back, () => canvasTex(drawBack()));
+  st.joker = def.joker === null ? null : artTex(st, def.joker, () => canvasTex(drawJoker()));
+  st.tuck = artTex(st, def.tuck?.front, () => canvasTex(drawTuck()));
+  states.set(def.id, st); return st;
+}
+// Switch every live card (and anything listening, like the Blackjack shoe) to another edition.
+export async function setEdition(id) {
+  const st = await load(editionDef(id)); if (st === ed) return;
+  ed = st;
+  for (const c of live) c.retexture();
+  for (const fn of listeners) fn(st.def);
+}
+export async function initCards(renderer, id) {
+  aniso = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+  try { const r = await fetch('art/manifest.json'); if (r.ok) manifest = { editions: [], boxes: {}, ...(await r.json()) }; } catch (e) { /* procedural only */ }
+  ed = await load(editionDef(id)); // waited for, so the first frame already has the real back
+}
+export const manifestBoxes = () => manifest.boxes || {};
+export const jokerTexture = () => ed.joker;
+export const tuckTexture = () => ed.tuck;
+export const backTexture = () => ed.back;
+export const cardKey = (suit, rank) => RANKS[rank - 1] + suit; // e.g. "QH", "10S"
 export function faceTexture(suit, rank) {
-  const k = cardKey(suit, rank);
-  if (!faceTex.has(k)) faceTex.set(k, artTex(manifest.faces[k], () => atlasCell(suit, rank) || canvasTex(drawFace(suit, rank))));
-  return faceTex.get(k);
+  const k = cardKey(suit, rank), f = ed.def.faces, ref = f === 'sheet' ? 'sheet:' + k : f?.[k]; // "sheet": every face is a cell
+  if (!ed.faces.has(k)) ed.faces.set(k, artTex(ed, ref, () => atlasCell(ed, suit, rank) || canvasTex(drawFace(suit, rank))));
+  return ed.faces.get(k);
 }
 export function slotTexture(kind) {
   if (!slotTex.has(kind)) slotTex.set(kind, canvasTex(drawSlot(kind)));
@@ -68,10 +101,16 @@ export class Card {
     this.suit = suit; this.rank = rank; this.red = suit === 'H' || suit === 'D'; this.faceUp = false;
     this.group = new THREE.Group(); this.flipper = new THREE.Group(); this.group.add(this.flipper);
     this.frontMat = new THREE.MeshLambertMaterial({ map: faceTexture(suit, rank), alphaTest: 0.5 });
-    this.backMat = new THREE.MeshLambertMaterial({ map: backTex, alphaTest: 0.5 });
+    this.backMat = new THREE.MeshLambertMaterial({ map: ed.back, alphaTest: 0.5 });
     this.front = new THREE.Mesh(geoFront, this.frontMat); this.back = new THREE.Mesh(geoBack, this.backMat);
     for (const m of [this.front, this.back]) { m.castShadow = true; m.receiveShadow = true; m.userData.card = this; this.flipper.add(m); }
-    this.flipper.rotation.z = Math.PI; this._token = null;
+    this.flipper.rotation.z = Math.PI; this._token = null; live.add(this);
+  }
+  retexture() {
+    this.backMat.map = ed.back;
+    if (!this.joker) this.frontMat.map = faceTexture(this.suit, this.rank);
+    else { this.group.visible = !!ed.joker; if (ed.joker) this.frontMat.map = ed.joker; } // editions without Jokers hide them
+    this.frontMat.needsUpdate = this.backMat.needsUpdate = true;
   }
   get name() { return cardKey(this.suit, this.rank); }
   get color() { return this.red ? 'r' : 'b'; }
@@ -104,12 +143,12 @@ export class Card {
       },
     });
   }
-  dispose() { this.frontMat.dispose(); this.backMat.dispose(); }
+  dispose() { live.delete(this); this.frontMat.dispose(); this.backMat.dispose(); }
 }
 
 // Jokers don't play in either game; they lie on the table, set aside the way they come out of a real deck.
 export function jokerCard() {
-  const c = new Card('S', 1); c.joker = true; c.frontMat.map = jokerTexture(); c.setFace(true); return c;
+  const c = new Card('S', 1); c.joker = true; c.retexture(); c.setFace(true); return c;
 }
 export function newDeck() {
   const d = [];
