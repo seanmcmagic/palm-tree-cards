@@ -141,6 +141,7 @@ async function buildTitle() {
 // Start a game with a deck: the tuck comes out of the box and opens while the edition's textures load.
 async function launch(gameId, edId = store.settings.deck) {
   if (titleBox.busy || $('#title').hidden) return;
+  if (editionDef(edId).concept) return; // concept decks are vote-only
   if (gameId === 'sol' && !launch.drawPicked) return klondikeModal(edId);
   launch.drawPicked = false;
   store.settings.deck = editionDef(edId).id; save(); syncTitleButtons();
@@ -160,15 +161,15 @@ function klondikeModal(edId) {
     { label: 'Cancel' },
   ]);
 }
-// A concept deck: not printed yet. Play it with standard faces, or say you'd buy it. Votes are counted on this
-// device only (store.votes) until there is a server: a demand test for which deck to print next.
+// A concept deck: only the tuck exists, so it isn't playable; players say whether they'd buy it. Votes are counted
+// on this device only (store.votes) until there is a server: a demand test for which deck to print next.
 function conceptModal(def) {
-  const n = store.votes[def.id] || 0;
-  app.modal(def.name, `<p>A concept deck from my mockups, not printed yet. The back and tuck come from the render; the faces are the standard ones.</p>
+  const n = store.votes[def.id] || 0, s = def.sheet, tier = s.files[TIER] ? TIER : 'hi', L = s.layouts[tier];
+  const col = s.cells.indexOf('tuck') % L.cols; // the tuck cell of its sheet, shown large
+  const tuck = `<div class="concept-tuck" style="background-image:url('art/${s.files[tier]}');background-size:${L.cols * 100}% ${L.rows * 100}%;background-position:${(col / Math.max(1, L.cols - 1)) * 100}% 0"></div>`;
+  app.modal(def.name, `${tuck}<p>A tuck design for a deck I might print next. Would you buy it?</p>
     <p class="votes">♥ ${n} ${n === 1 ? 'vote' : 'votes'} on this device</p>`, [
     { label: "I'd buy this", primary: true, run: () => { store.votes[def.id] = n + 1; save(); sfx.tap(); titleBox.labels(true); app.toast('Thanks! Counted.'); conceptModal(def); } },
-    { label: 'Solitaire', run: () => launch('sol', def.id) },
-    { label: 'Blackjack', run: () => launch('bj', def.id) },
     { label: 'Close' },
   ]);
 }
@@ -193,7 +194,7 @@ function fitTitle() { // keep the box clear of the menu panel (below it, or left
 }
 function syncTitleButtons() {
   $('#soundBtn').textContent = store.settings.sound ? 'Sound on' : 'Sound off';
-  const d = editionDef(store.settings.deck); $('#deckBtn').textContent = `Deck: ${d.name}${d.concept ? ' (concept)' : ''}`;
+  $('#deckBtn').textContent = `Deck: ${editionDef(store.settings.deck).name}`;
 }
 function statsHtml() {
   const s = store.sol, b = store.bj, pct = (w, p) => (p ? Math.round((w / p) * 100) + '%' : '–');
@@ -212,7 +213,7 @@ function titleAction(act) {
   else if (act === 'blackjack') launch('bj');
   else if (act === 'music') { musicOpen() ? closeMusic() : openMusic(app); sfx.tap(); }
   else if (act === 'deck') { // cycle editions; a game in progress switches look too
-    const eds = editions(), i = eds.findIndex((e) => e.id === store.settings.deck);
+    const eds = editions().filter((e) => !e.concept), i = eds.findIndex((e) => e.id === store.settings.deck); // concepts are vote-only
     store.settings.deck = eds[(i + 1) % eds.length].id; save(); syncTitleButtons(); setEdition(store.settings.deck); titleBox.skin(store.settings.deck); sfx.tap();
   }
   else if (act === 'sound') { store.settings.sound = !store.settings.sound; save(); syncTitleButtons(); sfx.tap(); }
@@ -319,6 +320,7 @@ function step(now) {
 // ---------- boot ----------
 async function boot() {
   try { await Promise.race([Promise.all(['400 40px "Lilita One"', '400 40px "Pacifico"', '900 40px "Nunito Sans"'].map((f) => document.fonts.load(f))), new Promise((r) => setTimeout(r, 2500))]); } catch (e) { /* offline: fallbacks */ }
+  if (editionDef(store.settings.deck).concept) { store.settings.deck = 'original'; save(); } // concepts used to be playable
   await initCards(renderer, store.settings.deck);
   await buildTitle();
   games.sol = new Solitaire(app, $('#solHud')); games.bj = new Blackjack(app, $('#bjHud'));

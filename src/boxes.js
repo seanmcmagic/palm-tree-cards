@@ -2,7 +2,7 @@
 // dieline texture (panel rects come from art/manifest.json), so one texture and one draw call cover a whole tuck.
 // The title menu is an open brick: one row of tucks per edition, one column per game. Picking a tuck chooses
 // both; the tuck lifts out, its lid opens and the deck slides out before the game starts. Concept decks (editions
-// marked concept) stand in the spare columns, front row first, as "coming soon" tucks.
+// marked concept) stand in the spare columns, front row first; they are vote-only, not playable.
 import * as THREE from 'three';
 import { C } from './art.js';
 import { CARD_W, CARD_H, editions, editionDef, loadTiered, manifestBoxes, tuckTexture, backTexture } from './cards.js';
@@ -171,7 +171,7 @@ export class TitleBox {
     const eds = this.eds, votes = this.app.store.votes || {};
     for (const [k, { def }] of this.concepts) {
       const [r, c] = k.split(',').map(Number), p = this.slot(r, c), n = votes[def.id] || 0;
-      this.app.label('tcp' + k, show ? `soon${n ? ` · ♥ ${n}` : ''}` : null, new THREE.Vector3(p.x, p.y + TH + 0.22, p.z), 'title-label concept-label');
+      this.app.label('tcp' + k, show ? `vote${n ? ` · ♥ ${n}` : ''}` : null, new THREE.Vector3(p.x, p.y + TH + 0.22, p.z), 'title-label concept-label');
     }
     for (let c = 0; c < this.cols; c++) {
       const g = this.game(c), p = this.slot(0, c);

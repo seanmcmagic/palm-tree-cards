@@ -97,3 +97,4 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: var(--lagoon
 .music-frame iframe { display: block; width: 240px; height: 200px; border: 0; }
 .music-empty { font: 700 13px/1.4 var(--body); color: var(--card-white); padding: 16px; margin: 0; }
 .music-now { margin: 0 0 8px; font: 700 13px/1.3 var(--body); color: var(--card-white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.concept-tuck { width: 150px; aspect-ratio: 5 / 7; margin: 0 auto 12px; border-radius: 8px; background-repeat: no-repeat; box-shadow: 0 8px 22px rgba(0,27,51,.5); }
