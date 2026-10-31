@@ -73,10 +73,12 @@ export async function setEdition(id) {
   for (const c of live) c.retexture();
   for (const fn of listeners) fn(st.def);
 }
-export async function initCards(renderer, id) {
+export async function loadManifest(renderer) {
   aniso = Math.min(4, renderer.capabilities.getMaxAnisotropy());
   try { const r = await fetch('art/manifest.json', { cache: 'no-store' }); if (r.ok) manifest = { editions: [], boxes: {}, ...(await r.json()) }; } catch (e) { /* procedural only */ }
-  ed = await load(editionDef(id)); // waited for, so the first frame already has the real back
+}
+export async function initCards(id) { // waited for before any Card exists, so the first frame already has the real back
+  ed = await load(editionDef(id));
 }
 export const manifestBoxes = () => manifest.boxes || {};
 export const manifestRoom = () => manifest.room || {};

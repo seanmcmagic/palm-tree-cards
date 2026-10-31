@@ -1,14 +1,14 @@
 {
   "_comment": "Written by tools/build_art.py; see README \"Where real art goes\".",
-  "version": "20261030212306",
+  "version": "20261030215757",
   "editions": [
     {
       "id": "original",
       "name": "Original",
       "sheet": {
         "files": {
-          "hi": "original/sheet_hi.png",
-          "lo": "original/sheet_lo.png"
+          "hi": "original/sheet_hi.webp",
+          "lo": "original/sheet_lo.webp"
         },
         "layouts": {
           "hi": {
@@ -47,8 +47,8 @@
         "front": "sheet:tuck",
         "die": {
           "files": {
-            "hi": "original/tuck_hi.png",
-            "lo": "original/tuck_lo.png"
+            "hi": "original/tuck_hi.webp",
+            "lo": "original/tuck_lo.webp"
           },
           "panels": {
             "front": [
@@ -102,8 +102,8 @@
       "name": "Winter",
       "sheet": {
         "files": {
-          "hi": "winter/sheet_hi.png",
-          "lo": "winter/sheet_lo.png"
+          "hi": "winter/sheet_hi.webp",
+          "lo": "winter/sheet_lo.webp"
         },
         "layouts": {
           "hi": {
@@ -191,8 +191,8 @@
         "front": "sheet:tuck",
         "die": {
           "files": {
-            "hi": "winter/tuck_hi.png",
-            "lo": "winter/tuck_lo.png"
+            "hi": "winter/tuck_hi.webp",
+            "lo": "winter/tuck_lo.webp"
           },
           "panels": {
             "front": [
@@ -243,8 +243,8 @@
       "boxes": {
         "half": {
           "files": {
-            "hi": "winter/half_hi.png",
-            "lo": "winter/half_lo.png"
+            "hi": "winter/half_hi.webp",
+            "lo": "winter/half_lo.webp"
           },
           "panels": {
             "front": [
@@ -281,8 +281,8 @@
         },
         "brick": {
           "files": {
-            "hi": "winter/brick_hi.png",
-            "lo": "winter/brick_lo.png"
+            "hi": "winter/brick_hi.webp",
+            "lo": "winter/brick_lo.webp"
           },
           "panels": {
             "front": [
@@ -326,8 +326,8 @@
       "source": "OIG2.jpeg",
       "sheet": {
         "files": {
-          "hi": "concepts/spring/sheet_hi.png",
-          "lo": "concepts/spring/sheet_lo.png"
+          "hi": "concepts/spring/sheet_hi.webp",
+          "lo": "concepts/spring/sheet_lo.webp"
         },
         "layouts": {
           "hi": {
@@ -362,8 +362,8 @@
         "front": "sheet:tuck",
         "die": {
           "files": {
-            "hi": "concepts/spring/tuck_hi.png",
-            "lo": "concepts/spring/tuck_lo.png"
+            "hi": "concepts/spring/tuck_hi.webp",
+            "lo": "concepts/spring/tuck_lo.webp"
           },
           "panels": {
             "front": [
@@ -419,8 +419,8 @@
       "source": "IMG_20231104_193101_715.jpg",
       "sheet": {
         "files": {
-          "hi": "concepts/fall/sheet_hi.png",
-          "lo": "concepts/fall/sheet_lo.png"
+          "hi": "concepts/fall/sheet_hi.webp",
+          "lo": "concepts/fall/sheet_lo.webp"
         },
         "layouts": {
           "hi": {
@@ -455,8 +455,8 @@
         "front": "sheet:tuck",
         "die": {
           "files": {
-            "hi": "concepts/fall/tuck_hi.png",
-            "lo": "concepts/fall/tuck_lo.png"
+            "hi": "concepts/fall/tuck_hi.webp",
+            "lo": "concepts/fall/tuck_lo.webp"
           },
           "panels": {
             "front": [
@@ -512,8 +512,8 @@
       "source": "file-Df6JtqD947uXUEE7qCKey7Xu.jpg",
       "sheet": {
         "files": {
-          "hi": "concepts/midnight/sheet_hi.png",
-          "lo": "concepts/midnight/sheet_lo.png"
+          "hi": "concepts/midnight/sheet_hi.webp",
+          "lo": "concepts/midnight/sheet_lo.webp"
         },
         "layouts": {
           "hi": {
@@ -548,8 +548,8 @@
         "front": "sheet:tuck",
         "die": {
           "files": {
-            "hi": "concepts/midnight/tuck_hi.png",
-            "lo": "concepts/midnight/tuck_lo.png"
+            "hi": "concepts/midnight/tuck_hi.webp",
+            "lo": "concepts/midnight/tuck_lo.webp"
           },
           "panels": {
             "front": [
@@ -605,8 +605,8 @@
       "source": "file-mYCeWxmaW7hZnWaeupoorzrV.jpg",
       "sheet": {
         "files": {
-          "hi": "concepts/ornate/sheet_hi.png",
-          "lo": "concepts/ornate/sheet_lo.png"
+          "hi": "concepts/ornate/sheet_hi.webp",
+          "lo": "concepts/ornate/sheet_lo.webp"
         },
         "layouts": {
           "hi": {
@@ -641,8 +641,8 @@
         "front": "sheet:tuck",
         "die": {
           "files": {
-            "hi": "concepts/ornate/tuck_hi.png",
-            "lo": "concepts/ornate/tuck_lo.png"
+            "hi": "concepts/ornate/tuck_hi.webp",
+            "lo": "concepts/ornate/tuck_lo.webp"
           },
           "panels": {
             "front": [
@@ -698,8 +698,8 @@
       "source": "OIG.jpeg",
       "sheet": {
         "files": {
-          "hi": "concepts/navywinter/sheet_hi.png",
-          "lo": "concepts/navywinter/sheet_lo.png"
+          "hi": "concepts/navywinter/sheet_hi.webp",
+          "lo": "concepts/navywinter/sheet_lo.webp"
         },
         "layouts": {
           "hi": {
@@ -734,8 +734,8 @@
         "front": "sheet:tuck",
         "die": {
           "files": {
-            "hi": "concepts/navywinter/tuck_hi.png",
-            "lo": "concepts/navywinter/tuck_lo.png"
+            "hi": "concepts/navywinter/tuck_hi.webp",
+            "lo": "concepts/navywinter/tuck_lo.webp"
           },
           "panels": {
             "front": [
@@ -791,8 +791,8 @@
       "source": "file-fZozkBvAJRkghUTzrX2PfunL.jpg",
       "sheet": {
         "files": {
-          "hi": "concepts/summer/sheet_hi.png",
-          "lo": "concepts/summer/sheet_lo.png"
+          "hi": "concepts/summer/sheet_hi.webp",
+          "lo": "concepts/summer/sheet_lo.webp"
         },
         "layouts": {
           "hi": {
@@ -827,8 +827,8 @@
         "front": "sheet:tuck",
         "die": {
           "files": {
-            "hi": "concepts/summer/tuck_hi.png",
-            "lo": "concepts/summer/tuck_lo.png"
+            "hi": "concepts/summer/tuck_hi.webp",
+            "lo": "concepts/summer/tuck_lo.webp"
           },
           "panels": {
             "front": [
@@ -884,8 +884,8 @@
       "source": "file-EkD1gpF1tnb2CmbzMfNImXWy.jpg",
       "sheet": {
         "files": {
-          "hi": "concepts/midnightwhite/sheet_hi.png",
-          "lo": "concepts/midnightwhite/sheet_lo.png"
+          "hi": "concepts/midnightwhite/sheet_hi.webp",
+          "lo": "concepts/midnightwhite/sheet_lo.webp"
         },
         "layouts": {
           "hi": {
@@ -920,8 +920,8 @@
         "front": "sheet:tuck",
         "die": {
           "files": {
-            "hi": "concepts/midnightwhite/tuck_hi.png",
-            "lo": "concepts/midnightwhite/tuck_lo.png"
+            "hi": "concepts/midnightwhite/tuck_hi.webp",
+            "lo": "concepts/midnightwhite/tuck_lo.webp"
           },
           "panels": {
             "front": [
@@ -977,8 +977,8 @@
       "source": "file-wjrrGJSne8pxaLD6TQVu6YYL.jpg",
       "sheet": {
         "files": {
-          "hi": "concepts/aceofspades/sheet_hi.png",
-          "lo": "concepts/aceofspades/sheet_lo.png"
+          "hi": "concepts/aceofspades/sheet_hi.webp",
+          "lo": "concepts/aceofspades/sheet_lo.webp"
         },
         "layouts": {
           "hi": {
@@ -1013,8 +1013,8 @@
         "front": "sheet:tuck",
         "die": {
           "files": {
-            "hi": "concepts/aceofspades/tuck_hi.png",
-            "lo": "concepts/aceofspades/tuck_lo.png"
+            "hi": "concepts/aceofspades/tuck_hi.webp",
+            "lo": "concepts/aceofspades/tuck_lo.webp"
           },
           "panels": {
             "front": [
@@ -1067,8 +1067,8 @@
   "boxes": {
     "half": {
       "files": {
-        "hi": "box/half_hi.png",
-        "lo": "box/half_lo.png"
+        "hi": "box/half_hi.webp",
+        "lo": "box/half_lo.webp"
       },
       "panels": {
         "front": [
@@ -1105,8 +1105,8 @@
     },
     "brick": {
       "files": {
-        "hi": "box/brick_hi.png",
-        "lo": "box/brick_lo.png"
+        "hi": "box/brick_hi.webp",
+        "lo": "box/brick_lo.webp"
       },
       "panels": {
         "front": [
@@ -1148,8 +1148,8 @@
         "id": "original_backs",
         "name": "Original backs",
         "files": {
-          "hi": "room/original_backs_hi.png",
-          "lo": "room/original_backs_lo.png"
+          "hi": "room/original_backs_hi.webp",
+          "lo": "room/original_backs_lo.webp"
         },
         "aspect": 0.8108
       },
@@ -1157,8 +1157,8 @@
         "id": "winter_backs",
         "name": "Winter backs",
         "files": {
-          "hi": "room/winter_backs_hi.png",
-          "lo": "room/winter_backs_lo.png"
+          "hi": "room/winter_backs_hi.webp",
+          "lo": "room/winter_backs_lo.webp"
         },
         "aspect": 0.8749
       },
@@ -1166,8 +1166,8 @@
         "id": "winter_faces",
         "name": "Winter faces",
         "files": {
-          "hi": "room/winter_faces_hi.png",
-          "lo": "room/winter_faces_lo.png"
+          "hi": "room/winter_faces_hi.webp",
+          "lo": "room/winter_faces_lo.webp"
         },
         "aspect": 0.8749
       }

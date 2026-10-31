@@ -56,16 +56,16 @@ to the trim. The print file's images are CMYK at about 396 dpi with a 1/8 in ble
 rounds the corners to match the canvas cards and adds the same hairline edge. The colours survive the conversion:
 the Original back's midnight comes out as `#002a50` against the `#002a4f` token.
 
-**Two tiers.** Every texture comes as `_hi` (desktop, tablets) and `_lo` (phones: coarse pointer and shorter screen
+**WebP, two tiers.** Textures are lossy WebP (quality 90, lossless alpha), about a quarter of the PNG size: a phone's first visit downloads about 0.7 MB of art instead of 3.7 MB, and the box's tucks load in parallel. Every texture comes as `_hi` (desktop, tablets) and `_lo` (phones: coarse pointer and shorter screen
 side under 700 px; `?tier=lo` or `?tier=hi` forces one). All are powers of two, so three.js builds mipmaps. An
 edition's textures load only when it is first used, then stay cached.
 
 | File | hi | lo |
 |---|---|---|
-| `art/original/sheet_*.png`: back, AS, JK, tuck front | 2048 × 1024 (cells 512 × 1024) | 1024 × 512 |
-| `art/winter/sheet_*.png`: back, tuck front, 52 faces | 4096 × 2048 (cells 256 × 512) | 2048 × 2048 (cells 256 × 256) |
-| `art/<edition>/tuck_*.png`: the tuck dieline | 1024 × 1024 | 512 × 512 |
-| `art/box/half_*.png`, `art/box/brick_*.png`: the brick dielines | 2048 × 1024 | 1024 × 512 |
+| `art/original/sheet_*.webp`: back, AS, JK, tuck front | 2048 × 1024 (cells 512 × 1024) | 1024 × 512 |
+| `art/winter/sheet_*.webp`: back, tuck front, 52 faces | 4096 × 2048 (cells 256 × 512) | 2048 × 2048 (cells 256 × 256) |
+| `art/<edition>/tuck_*.webp`: the tuck dieline | 1024 × 1024 | 512 × 512 |
+| `art/box/half_*.webp`, `art/box/brick_*.webp`: the brick dielines | 2048 × 1024 | 1024 × 512 |
 
 Card cells hold a 5:7 card stretched to fill the cell (the UVs undo it), with a gutter the UVs skip so mip levels
 don't bleed between cells. The Winter phone sheet uses square cells so each card keeps 256 px across rather than 128.
@@ -143,7 +143,7 @@ and the games pick it up with no other code. An edition entry:
 
 ```json
 { "id": "winter", "name": "Winter",
-  "sheet": { "files": { "hi": "winter/sheet_hi.png", "lo": "winter/sheet_lo.png" }, "cells": ["back", "tuck", "AS", "..."],
+  "sheet": { "files": { "hi": "winter/sheet_hi.webp", "lo": "winter/sheet_lo.webp" }, "cells": ["back", "tuck", "AS", "..."],
              "layouts": { "hi": { "cell": [256, 512], "gutter": 6, "cols": 16, "rows": 4 }, "lo": { "...": "..." } } },
   "back": "sheet:back", "joker": null, "faces": "sheet", "atlas": null,
   "tuck": { "front": "sheet:tuck", "die": { "files": { "hi": "...", "lo": "..." }, "panels": { "front": [0.1, 0.2, 0.4, 0.8], "...": [] } } } }

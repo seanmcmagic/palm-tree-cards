@@ -101,11 +101,15 @@ export class TitleBox {
     this.kind = kind; this.cols = cols; this.rows = rows;
     const W = cols * TW + (cols + 1) * GAP, D = rows * TD + (rows + 1) * GAP + 0.1;
     this.W = W; this.D = D;
-    await this.skin(this.app.store.settings.deck);
+    // every texture at once (one after another took a round trip each, slow on a phone network)
+    const spare = [];
+    for (let r = 0; r < rows; r++) for (let c = this.games.length; c < cols; c++) spare.push([r, c]);
+    const ideas = editions().filter((e) => e.concept).slice(0, spare.length);
+    const [, arts, ideaArts] = await Promise.all([this.skin(this.app.store.settings.deck), Promise.all(eds.map(tuckArt)), Promise.all(ideas.map(tuckArt))]);
     // the tucks: one instanced mesh per edition, a row each (front row first)
-    this.arts = []; this.meshes = [];
+    this.arts = arts; this.meshes = [];
     for (let r = 0; r < rows; r++) {
-      const art = await tuckArt(eds[r]); this.arts.push(art);
+      const art = arts[r];
       const m = new THREE.InstancedMesh(tuckGeometry(art.P), new THREE.MeshLambertMaterial({ map: art.tex }), cols);
       m.castShadow = true; m.receiveShadow = true; m.userData.row = r; m.frustumCulled = false;
       this.meshes.push(m); this.root.add(m);
@@ -113,11 +117,8 @@ export class TitleBox {
     }
     // concept decks: one plain mesh each, in the spare slots (front row first); the row's instance there is hidden
     this.concepts = new Map(); this.picks = [...this.meshes];
-    const spare = [];
-    for (let r = 0; r < rows; r++) for (let c = this.games.length; c < cols; c++) spare.push([r, c]);
-    const ideas = editions().filter((e) => e.concept);
-    for (let i = 0; i < Math.min(spare.length, ideas.length); i++) {
-      const [r, c] = spare[i], art = await tuckArt(ideas[i]);
+    for (let i = 0; i < ideas.length; i++) {
+      const [r, c] = spare[i], art = ideaArts[i];
       const mesh = new THREE.Mesh(tuckGeometry(art.P), new THREE.MeshLambertMaterial({ map: art.tex }));
       mesh.castShadow = mesh.receiveShadow = true; mesh.userData = { r, c };
       this.concepts.set(r + ',' + c, { def: ideas[i], art, mesh }); this.picks.push(mesh); this.root.add(mesh);

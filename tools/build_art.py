@@ -79,7 +79,10 @@ def pdf_image(doc, page, xref_pick):
 
 def save(img, path):
     path.parent.mkdir(parents=True, exist_ok=True)
-    img.save(path, optimize=True)
+    if path.suffix == '.webp':  # lossy WebP with lossless alpha: a quarter of the PNG size or less, crisp at card size
+        img.save(path, quality=90, method=6, alpha_quality=100)
+    else:
+        img.save(path, optimize=True)
     print(path.relative_to(ROOT).as_posix(), img.size, f'{path.stat().st_size / 1024:.0f} KB')
     return path.relative_to(ROOT / 'art').as_posix()
 
@@ -115,7 +118,7 @@ def card_sheet(edition, cells, hi, lo=None):
         for i, (k, img) in enumerate(cells.items()):
             make = flat_cell if k == 'tuck' else card_cell
             sheet.paste(make(img, cw, ch, g), ((i % cols) * cw, (i // cols) * ch))
-        files[tier] = save(sheet, ROOT / 'art' / edition / f'sheet_{tier}.png')
+        files[tier] = save(sheet, ROOT / 'art' / edition / f'sheet_{tier}.webp')
         layouts[tier] = {'cell': [cw, ch], 'gutter': g, 'cols': cols, 'rows': rows}
     return {'files': files, 'layouts': layouts, 'cells': list(cells)}
 
@@ -127,7 +130,7 @@ def die_atlas(img, panels, out_dir, name, size):
     crop = img.crop((round(x0), round(y0), round(x1), round(y1)))
     files = {}
     for tier, scale in (('hi', 1), ('lo', 2)):
-        files[tier] = save(crop.resize((size[0] // scale, size[1] // scale), Image.LANCZOS).convert('RGB'), out_dir / f'{name}_{tier}.png')
+        files[tier] = save(crop.resize((size[0] // scale, size[1] // scale), Image.LANCZOS).convert('RGB'), out_dir / f'{name}_{tier}.webp')
     w, h = x1 - x0, y1 - y0
     uv = {k: [round((r[0] - x0) / w, 5), round((r[1] - y0) / h, 5), round((r[2] - x0) / w, 5), round((r[3] - y0) / h, 5)] for k, r in panels.items()}
     return {'files': files, 'panels': uv}
@@ -378,7 +381,7 @@ def concept_tuck(front, back, side, board, out_dir):
             x0, y0, x1, y1 = layout[k]; die.paste(side.resize((x1 - x0, y1 - y0), Image.LANCZOS), (x0, y0))
     files = {}
     for tier, scale in (('hi', 1), ('lo', 2)):
-        files[tier] = save(die.resize((W // scale, W // scale), Image.LANCZOS), out_dir / f'tuck_{tier}.png')
+        files[tier] = save(die.resize((W // scale, W // scale), Image.LANCZOS), out_dir / f'tuck_{tier}.webp')
     return {'files': files, 'panels': {k: [r[0] / W, r[1] / W, r[2] / W, r[3] / W] for k, r in layout.items()}}
 
 
@@ -529,7 +532,7 @@ def posters():
         img = album(prefix)
         files = {}
         for tier, size in (('hi', 1024), ('lo', 512)):
-            files[tier] = save(img.resize((size, size), Image.LANCZOS), ROOT / 'art' / 'room' / f'{key}_{tier}.png')
+            files[tier] = save(img.resize((size, size), Image.LANCZOS), ROOT / 'art' / 'room' / f'{key}_{tier}.webp')
         out.append({'id': key, 'name': name, 'files': files, 'aspect': round(img.width / img.height, 4)})
     return out
 

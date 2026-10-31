@@ -1,7 +1,7 @@
 // Palm Tree Cards: scene, camera fitting, input (pointer, keyboard, Gamepad API), screens.
 import * as THREE from 'three';
 import { drawTable, C, CW, CH, roundRect, canvas } from './art.js';
-import { initCards, CARD_H, TIER, artUrl, editions, editionDef, setEdition } from './cards.js';
+import { initCards, loadManifest, CARD_H, TIER, artUrl, editions, editionDef, setEdition } from './cards.js';
 import { TitleBox } from './boxes.js';
 import { buildRoom, ROOM_TOP, WALL_Z } from './room.js';
 import { openMusic, closeMusic, musicOpen } from './music.js';
@@ -324,10 +324,11 @@ function step(now) {
 
 // ---------- boot ----------
 async function boot() {
-  try { await Promise.race([Promise.all(['400 40px "Lilita One"', '400 40px "Pacifico"', '900 40px "Nunito Sans"'].map((f) => document.fonts.load(f))), new Promise((r) => setTimeout(r, 2500))]); } catch (e) { /* offline: fallbacks */ }
+  // fonts and the manifest together, then the deck and the box together: each step waits only on what it needs
+  const fonts = Promise.race([Promise.all(['400 40px "Lilita One"', '400 40px "Pacifico"', '900 40px "Nunito Sans"'].map((f) => document.fonts.load(f))), new Promise((r) => setTimeout(r, 2500))]).catch(() => {}); // offline: fallbacks
+  await Promise.all([fonts, loadManifest(renderer)]);
   if (editionDef(store.settings.deck).concept) { store.settings.deck = 'original'; save(); } // concepts used to be playable
-  await initCards(renderer, store.settings.deck);
-  await buildTitle();
+  await Promise.all([initCards(store.settings.deck), buildTitle()]);
   games.sol = new Solitaire(app, $('#solHud')); games.bj = new Blackjack(app, $('#bjHud'));
   for (const g of Object.values(games)) scene.add(g.root);
   resize(); show('title'); requestAnimationFrame(frame);
