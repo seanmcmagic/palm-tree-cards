@@ -1,7 +1,8 @@
 // Tuck cases and brick boxes, built from the print dielines. Every face of a box samples its panel of the
 // dieline texture (panel rects come from art/manifest.json), so one texture and one draw call cover a whole tuck.
 // The title menu is an open brick: one row of tucks per edition, one column per game. Picking a tuck chooses
-// both; the tuck lifts out, its lid opens and the deck slides out before the game starts.
+// both; the tuck lifts out, its lid opens and the deck slides out before the game starts. Concept decks (editions
+// marked concept) stand in the spare columns, front row first, as "coming soon" tucks.
 import * as THREE from 'three';
 import { C } from './art.js';
 import { CARD_W, CARD_H, editions, loadTiered, manifestBoxes, tuckTexture, backTexture } from './cards.js';
@@ -91,11 +92,12 @@ function boxGeometry(P, W, D, H) {
 }
 
 export class TitleBox {
-  // games: [{ id, name }] in column order; columns past the games hold spare tucks ("more later").
+  // games: [{ id, name }] in column order; columns past the games hold concept decks, then spare tucks.
   constructor(app, games) { this.app = app; this.games = games; this.root = new THREE.Group(); this.hover = null; this.busy = false; }
 
   async build(kind) {
-    const boxes = manifestBoxes(), eds = editions(), cols = LAYOUT[kind].cols, rows = eds.length;
+    const boxes = manifestBoxes(), eds = editions().filter((e) => !e.concept), cols = LAYOUT[kind].cols, rows = eds.length;
+    this.eds = eds;
     this.kind = kind; this.cols = cols; this.rows = rows;
     const W = cols * TW + (cols + 1) * GAP, D = rows * TD + (rows + 1) * GAP + 0.1;
     this.W = W; this.D = D;
@@ -124,6 +126,18 @@ export class TitleBox {
       this.meshes.push(m); this.root.add(m);
       for (let c = 0; c < cols; c++) this.setTuck(r, c, 0);
     }
+    // concept decks: one plain mesh each, in the spare slots (front row first); the row's instance there is hidden
+    this.concepts = new Map(); this.picks = [...this.meshes];
+    const spare = [];
+    for (let r = 0; r < rows; r++) for (let c = this.games.length; c < cols; c++) spare.push([r, c]);
+    const ideas = editions().filter((e) => e.concept);
+    for (let i = 0; i < Math.min(spare.length, ideas.length); i++) {
+      const [r, c] = spare[i], art = await tuckArt(ideas[i]);
+      const mesh = new THREE.Mesh(tuckGeometry(art.P), new THREE.MeshLambertMaterial({ map: art.tex }));
+      mesh.castShadow = mesh.receiveShadow = true; mesh.userData = { r, c };
+      this.concepts.set(r + ',' + c, { def: ideas[i], art, mesh }); this.picks.push(mesh); this.root.add(mesh);
+      this.setTuck(r, c, 0);
+    }
     this.opener = null; this.artOpeners = new Map();
     return this;
   }
@@ -134,14 +148,24 @@ export class TitleBox {
   slot(r, c) { // resting position of a tuck: front row at the front wall, later rows behind and higher
     return new THREE.Vector3(-this.W / 2 + GAP + TW / 2 + c * (TW + GAP), 0.02 + r * RISE, this.D / 2 - GAP - 0.05 - TD / 2 - r * (TD + GAP));
   }
+  concept(r, c) { return this.concepts?.get(r + ',' + c) || null; }
+  slotOf(id) { // where an edition's tuck stands: its row in a game column, or a concept's own slot
+    for (const [k, v] of this.concepts) if (v.def.id === id) return k.split(',').map(Number);
+    const r = this.eds.findIndex((e) => e.id === id); return r < 0 ? null : [r, null];
+  }
   setTuck(r, c, lift, hidden = false) {
-    const p = this.slot(r, c), m = new THREE.Matrix4().makeTranslation(p.x, p.y + lift, p.z);
-    if (hidden) m.makeScale(0, 0, 0);
+    const p = this.slot(r, c), m = new THREE.Matrix4().makeTranslation(p.x, p.y + lift, p.z), cp = this.concept(r, c);
+    if (cp) { cp.mesh.position.set(p.x, p.y + lift, p.z); cp.mesh.visible = !hidden; m.makeScale(0, 0, 0); }
+    else if (hidden) m.makeScale(0, 0, 0);
     this.meshes[r].setMatrixAt(c, m); this.meshes[r].instanceMatrix.needsUpdate = true; this.app.dirty();
   }
   game(c) { return this.games[c] || null; }
   labels(show) {
-    const eds = editions();
+    const eds = this.eds, votes = this.app.store.votes || {};
+    for (const [k, { def }] of this.concepts) {
+      const [r, c] = k.split(',').map(Number), p = this.slot(r, c), n = votes[def.id] || 0;
+      this.app.label('tcp' + k, show ? `soon${n ? ` · ♥ ${n}` : ''}` : null, new THREE.Vector3(p.x, p.y + TH + 0.22, p.z), 'title-label concept-label');
+    }
     for (let c = 0; c < this.cols; c++) {
       const g = this.game(c), p = this.slot(0, c);
       this.app.label('tcol' + c, show && g ? g.name : null, new THREE.Vector3(p.x, 0, this.D / 2 + 0.3 + (c % 2) * 0.32), 'title-label');
@@ -151,9 +175,10 @@ export class TitleBox {
       this.app.label('trow' + r, show ? eds[r].name : null, new THREE.Vector3(-this.W / 2 - 0.55, p.y + TH * 0.8, p.z), 'title-label edition-label');
     }
   }
-  // pointer: which tuck is under it (only game columns count)
+  // pointer: which tuck is under it (a game column, or a concept deck)
   pick(cx, cy) {
-    const hit = this.app.pick(cx, cy, this.meshes); if (!hit) return null;
+    const hit = this.app.pick(cx, cy, this.picks); if (!hit) return null;
+    if (hit.instanceId == null) { const { r, c } = hit.object.userData; return { r, c, concept: this.concept(r, c).def }; }
     const r = hit.object.userData.row, c = hit.instanceId;
     return this.game(c) ? { r, c } : null;
   }
@@ -167,9 +192,9 @@ export class TitleBox {
   // ready: resolves once the tuck's edition is live, so the deck that slides out wears that edition's back.
   async open(r, c, ready = Promise.resolve()) {
     this.busy = true; this.setHover(null); this.hover = null; document.body.style.cursor = '';
-    const art = this.arts[r];
-    if (!this.artOpeners.has(r)) { const o = openingTuck(art); this.artOpeners.set(r, o); this.root.add(o.group); }
-    const o = this.opener = this.artOpeners.get(r), g = o.group;
+    const cp = this.concept(r, c), art = cp ? cp.art : this.arts[r], key = cp ? cp.def.id : r;
+    if (!this.artOpeners.has(key)) { const o = openingTuck(art); this.artOpeners.set(key, o); this.root.add(o.group); }
+    const o = this.opener = this.artOpeners.get(key), g = o.group;
     o.group.visible = true; o.lid.rotation.x = 0; o.tongue.rotation.x = -Math.PI / 2; o.deck.position.y = 0; o.deck.visible = false;
     ready.then(() => { for (const m of o.deckMats.slice(4)) { m.map = backTexture(); m.needsUpdate = true; } o.deck.visible = true; this.app.dirty(); });
     const from = this.slot(r, c); this.setTuck(r, c, 0, true);

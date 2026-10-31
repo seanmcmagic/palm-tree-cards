@@ -82,6 +82,17 @@ Blackjack buttons, which use the Deck setting): it lifts out, the lid opens and 
 starts. Each row's tucks are one `InstancedMesh`, so a full brick is two draw calls for the tucks. On the box the lid
 hinges at the back wall so the logo wall faces you; on the dieline it hangs off the logo wall.
 
+**Concept decks ("coming soon").** `art/source/variants/` holds my deck mockups (52 images, almost all AI renders, and
+4 videos of the printed Original; 8 of the `.jpg` files are really HEIC). Four concepts are in the game: Summer
+Edition (the Apr 2026 patterned tuck), Midnight Edition (black and gold), Palm Springs, and Navy Winter (a navy-and-rose
+render whose box reads "Winter Edition", renamed so it doesn't clash with the real Winter deck). For each, the build
+script perspective-warps the tuck front out of one render (`CONCEPTS` in `tools/build_art.py` lists the corners). The back is the
+render's own box back where one is shown (Summer); otherwise it is the front's emblem on a field with a frame. Faces
+are the standard ones. They stand in the brick's spare columns, front row first (two fit in the half brick, four in
+the full brick). Tapping one opens a card with Solitaire, Blackjack and **I'd buy this**; each tap adds a vote, kept in
+`localStorage` (`votes` in `palmtree-cards-v1`) on this device only, a demand test for which deck to print next. The
+Deck button cycles through concepts too.
+
 The Original print file has two identical black Jokers; both lie in Solitaire's spare top-row column and neither
 game deals them. (`uspcc_files/jokers.jpg` is an earlier proof with one red Joker; the print file has none.)
 

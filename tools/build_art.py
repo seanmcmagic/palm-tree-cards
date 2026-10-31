@@ -11,6 +11,8 @@ Editions (a deck = back + faces + tuck), each into art/<edition>/:
               are Daniel Schneider's licensed redraws and stay out until the licence covers digital use.
   winter    Winter Edition (Fiverr commission, all rights mine): winter/<Suit>/<Suit>/<Rank>.ai, Back, Box.
               The .ai files are PDF-compatible; each card page is 196x266 pt with the 180x252 pt trim centred.
+  concepts  Deck ideas from my mockups in variants/ (mostly AI renders): a back and a tuck cut from one render each,
+              standard faces. They sit in the brick's spare slots as "coming soon" decks with an "I'd buy this" vote.
 Boxes (the title menu), into art/box/: the half brick (6 decks) and brick (12 decks) dielines.
 
 Card sheets: a grid of equal cells, each card stretched to fill its cell (the mesh UVs undo it), with a gutter
@@ -24,7 +26,7 @@ from pathlib import Path
 
 import numpy as np
 import pymupdf
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / 'art' / 'source'
@@ -218,6 +220,96 @@ def winter():
     }
 
 
+# Concepts: corners of the tuck front (and of the back, where a render shows one) in the source image, clockwise
+# from top-left, read off a grid at the image's own size. Where no back is shown, the back is the front's emblem
+# (rect as 0-1 fractions of the rectified front) on a field colour with a frame, the way many tucks echo the back.
+CONCEPTS = [
+    dict(id='summer26', name='Summer Edition', file='Generated Image April 17, 2026 - 1_52PM.png',
+         front=[(206, 284), (511, 279), (509, 766), (207, 777)], back=[(629, 287), (912, 285), (911, 762), (630, 776)],
+         side=[(169, 272), (204, 284), (205, 778), (170, 770)], board=(232, 226, 210)),
+    dict(id='midnight', name='Midnight Edition', file='file-Df6JtqD947uXUEE7qCKey7Xu.jpg',
+         front=[(292, 198), (730, 198), (730, 815), (292, 815)], emblem=(0.2, 0.21, 0.8, 0.74),
+         field=(14, 13, 12), frame=(214, 178, 118), board=(18, 17, 16)),
+    dict(id='palmsprings', name='Palm Springs', file='_b540104c-ee3f-4798-8474-38485cce163b.jpeg',
+         front=[(300, 212), (862, 110), (862, 902), (300, 988)], side=[(222, 160), (300, 212), (300, 988), (228, 935)],
+         emblem=(0.1, 0.07, 0.9, 0.34), twoway=True, field=(248, 240, 228), frame=(232, 93, 138), board=(246, 240, 230)),
+    dict(id='navywinter', name='Navy Winter', file='OIG.jpeg',
+         front=[(281, 190), (752, 190), (752, 822), (281, 822)], emblem=(0.15, 0.23, 0.85, 0.78),
+         field=(31, 45, 74), frame=(230, 184, 181), board=(33, 47, 76)),
+]
+
+
+def rectify(img, quad, size):
+    """Perspective-warp the quad (TL, TR, BR, BL) of img onto a flat size[0] x size[1] rectangle."""
+    w, h = size
+    dst = [(0, 0), (w, 0), (w, h), (0, h)]
+    rows, rhs = [], []
+    for (x, y), (u, v) in zip(quad, dst):  # solve for the map from output (u, v) back to source (x, y)
+        rows.append([u, v, 1, 0, 0, 0, -x * u, -x * v]); rhs.append(x)
+        rows.append([0, 0, 0, u, v, 1, -y * u, -y * v]); rhs.append(y)
+    coeffs = np.linalg.solve(np.array(rows, float), np.array(rhs, float))
+    return img.transform((w, h), Image.PERSPECTIVE, tuple(coeffs), Image.BICUBIC)
+
+
+def emblem_back(front, c, size=(500, 700)):
+    """A back made from the front's emblem: field colour, a thin frame, the emblem centred and feathered into the
+    field so no crop edge shows. twoway: the emblem in the top half and again turned 180 in the bottom half."""
+    w, h = size
+    back = Image.new('RGB', size, c['field'])
+    d = ImageDraw.Draw(back)
+    m = round(w * 0.06)
+    d.rectangle((m, m, w - m, h - m), outline=c['frame'], width=max(2, w // 120))
+    d.rectangle((m * 1.6, m * 1.6, w - m * 1.6, h - m * 1.6), outline=c['frame'], width=max(1, w // 300))
+    fw, fh = front.size
+    x0, y0, x1, y1 = c['emblem']
+    em = front.crop((round(x0 * fw), round(y0 * fh), round(x1 * fw), round(y1 * fh)))
+    box = (round(w * 0.76), round(h * (0.38 if c.get('twoway') else 0.74)))
+    em.thumbnail(box, Image.LANCZOS)
+    mask = Image.new('L', em.size, 0)
+    ImageDraw.Draw(mask).ellipse((em.width * 0.04, em.height * 0.04, em.width * 0.96, em.height * 0.96), fill=255)
+    mask = mask.filter(ImageFilter.GaussianBlur(min(em.size) * 0.06))
+    if c.get('twoway'):
+        back.paste(em, ((w - em.width) // 2, h // 2 - em.height - round(h * 0.02)), mask)
+        back.paste(em.rotate(180), ((w - em.width) // 2, h // 2 + round(h * 0.02)), mask.rotate(180))
+    else:
+        back.paste(em, ((w - em.width) // 2, (h - em.height) // 2), mask)
+    return back
+
+
+def concept_tuck(front, back, side, board, out_dir):
+    """A tuck dieline put together from the rectified faces; the narrow panels are the side art or plain board."""
+    W = 1024
+    layout = dict(front=(0, 0, 400, 560), back=(400, 0, 800, 560), left=(800, 0, 880, 560), right=(880, 0, 960, 560),
+                  top=(0, 560, 400, 672), tongue=(400, 560, 800, 672), bottom=(0, 672, 400, 784))
+    die = Image.new('RGB', (W, W), board)
+    for k, img in (('front', front), ('back', back)):
+        x0, y0, x1, y1 = layout[k]; die.paste(img.resize((x1 - x0, y1 - y0), Image.LANCZOS), (x0, y0))
+    if side is not None:
+        for k in ('left', 'right'):
+            x0, y0, x1, y1 = layout[k]; die.paste(side.resize((x1 - x0, y1 - y0), Image.LANCZOS), (x0, y0))
+    files = {}
+    for tier, scale in (('hi', 1), ('lo', 2)):
+        files[tier] = save(die.resize((W // scale, W // scale), Image.LANCZOS), out_dir / f'tuck_{tier}.png')
+    return {'files': files, 'panels': {k: [r[0] / W, r[1] / W, r[2] / W, r[3] / W] for k, r in layout.items()}}
+
+
+def concepts():
+    out = []
+    for c in CONCEPTS:
+        img = Image.open(SRC / 'variants' / c['file']).convert('RGB')
+        front = rectify(img, c['front'], (500, 700))
+        back = rectify(img, c['back'], (500, 700)) if 'back' in c else emblem_back(front, c)
+        side = rectify(img, c['side'], (80, 700)) if 'side' in c else None
+        d = ROOT / 'art' / 'concepts' / c['id']
+        out.append({
+            'id': c['id'], 'name': c['name'], 'concept': True, 'source': c['file'],
+            'sheet': card_sheet(f"concepts/{c['id']}", {'back': back, 'tuck': front}, ((512, 1024), 8, 2)),
+            'back': 'sheet:back', 'joker': None, 'faces': {}, 'atlas': None,
+            'tuck': {'front': 'sheet:tuck', 'die': concept_tuck(front, back, side, c['board'], d)},
+        })
+    return out
+
+
 def boxes():
     out = {}
     for kind, (file, panels) in BOX_PANELS.items():
@@ -232,7 +324,7 @@ def main():
             sys.exit(f'missing {need} (art/source is git-ignored; copy the sources in first)')
     manifest = {
         '_comment': 'Written by tools/build_art.py; see README "Where real art goes".',
-        'editions': [original(), winter()],
+        'editions': [original(), winter(), *concepts()],
         'boxes': boxes(),
     }
     (ROOT / 'art' / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')

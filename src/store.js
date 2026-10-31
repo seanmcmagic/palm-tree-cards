@@ -4,6 +4,7 @@ const fresh = () => ({
   v: 1,
   settings: { sound: true, draw: 1, deck: 'original' },
   sol: { played: 0, won: 0, streak: 0, bestStreak: 0, bestTime: null, bestMoves: null },
+  votes: {}, // concept deck id -> "I'd buy this" taps on this device
   bj: { bank: 500, hands: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0, peak: 500, rebuys: 0 },
 });
 function load() {

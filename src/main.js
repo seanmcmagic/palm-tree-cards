@@ -138,10 +138,23 @@ async function buildTitle() {
 // Start a game with a deck: the tuck comes out of the box and opens while the edition's textures load.
 async function launch(gameId, edId = store.settings.deck) {
   if (titleBox.busy || $('#title').hidden) return;
-  const r = Math.max(0, editions().findIndex((e) => e.id === edId)), c = GAMES.findIndex((g) => g.id === gameId);
   store.settings.deck = editionDef(edId).id; save(); syncTitleButtons();
-  await titleBox.open(r, c, setEdition(store.settings.deck));
+  const at = titleBox.slotOf(store.settings.deck), ready = setEdition(store.settings.deck);
+  if (at) await titleBox.open(at[0], at[1] ?? GAMES.findIndex((g) => g.id === gameId), ready);
+  else await ready; // a concept the half brick has no room for: straight in
   show(gameId); titleBox.reset();
+}
+// A concept deck: not printed yet. Play it with standard faces, or say you'd buy it. Votes are counted on this
+// device only (store.votes) until there is a server: a demand test for which deck to print next.
+function conceptModal(def) {
+  const n = store.votes[def.id] || 0;
+  app.modal(def.name, `<p>A concept deck from my mockups, not printed yet. The back and tuck come from the render; the faces are the standard ones.</p>
+    <p class="votes">♥ ${n} ${n === 1 ? 'vote' : 'votes'} on this device</p>`, [
+    { label: "I'd buy this", primary: true, run: () => { store.votes[def.id] = n + 1; save(); sfx.tap(); titleBox.labels(true); app.toast('Thanks! Counted.'); conceptModal(def); } },
+    { label: 'Solitaire', run: () => launch('sol', def.id) },
+    { label: 'Blackjack', run: () => launch('bj', def.id) },
+    { label: 'Close' },
+  ]);
 }
 // ---------- screens ----------
 const games = {};
@@ -165,7 +178,7 @@ function fitTitle() { // keep the box clear of the menu panel (below it, or left
 function syncTitleButtons() {
   $('#drawModeBtn').textContent = `Draw ${store.settings.draw}`;
   $('#soundBtn').textContent = store.settings.sound ? 'Sound on' : 'Sound off';
-  $('#deckBtn').textContent = `Deck: ${editionDef(store.settings.deck).name}`;
+  const d = editionDef(store.settings.deck); $('#deckBtn').textContent = `Deck: ${d.name}${d.concept ? ' (concept)' : ''}`;
 }
 function statsHtml() {
   const s = store.sol, b = store.bj, pct = (w, p) => (p ? Math.round((w / p) * 100) + '%' : '–');
@@ -204,7 +217,7 @@ document.addEventListener('click', (e) => {
 const cv = $('#gl');
 cv.addEventListener('pointerdown', (e) => {
   unlockAudio(); clearFocus(); usingPad = false; if (!$('#modal').hidden) return;
-  if (!current) { const h = titleBox.pick(e.clientX, e.clientY); if (h) launch(GAMES[h.c].id, editions()[h.r].id); return; }
+  if (!current) { const h = titleBox.pick(e.clientX, e.clientY); if (h) h.concept ? conceptModal(h.concept) : launch(GAMES[h.c].id, titleBox.eds[h.r].id); return; }
   cv.setPointerCapture(e.pointerId); current.pointerDown?.(e);
 });
 cv.addEventListener('pointermove', (e) => {
