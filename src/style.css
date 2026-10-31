@@ -37,6 +37,11 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: var(--lagoon
   /* Solitaire: Undo / Hint stand in a column at the right edge so the cards can use the full height */
   #solHud .bar.bottom { left: auto; right: calc(env(safe-area-inset-right, 0px) + 8px); bottom: auto; top: 50%;
     transform: translateY(-50%); flex-direction: column; padding: 0; }
+  /* Blackjack: the chip and action bars become a two-column block at the right edge */
+  #bjHud .bar.bottom { left: auto; right: calc(env(safe-area-inset-right, 0px) + 8px); bottom: auto; top: 54%;
+    transform: translateY(-50%); display: grid; grid-template-columns: auto auto; gap: 6px; padding: 0; justify-items: center; }
+  #bjHud .bar.bottom[hidden] { display: none; }
+  #bjHud .bar.bottom .btn { min-height: 40px; padding: 8px 12px; } #bjHud .bar.bottom .btn.chip { width: 46px; height: 46px; }
 }
 @media (orientation: portrait) and (max-width: 500px) { /* portrait phone: a compact menu so the box gets the screen */
   #title { padding: 12px 12px calc(var(--safe-b) + 14px); }

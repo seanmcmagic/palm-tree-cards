@@ -72,11 +72,14 @@ export class Blackjack {
   }
   hide() { this.root.visible = false; }
   layout() { // portrait screens tuck the shoe and discard in above the dealer so the hands can be bigger
-    const tall = innerWidth / innerHeight < 0.8;
-    SHOE.set(tall ? 1.9 : 3.3, 0, tall ? -3.6 : -2.5); DISCARD.set(tall ? -1.9 : -3.3, 0, SHOE.z);
+    const tall = innerWidth / innerHeight < 0.8, short = innerWidth > innerHeight && innerHeight < 560;
+    SHOE.set(tall ? 1.9 : 3.3, 0, tall ? -3.6 : short ? -1.9 : -2.5); DISCARD.set(tall ? -1.9 : -3.3, 0, SHOE.z);
     this.shoeMesh.position.set(SHOE.x, 0.3, SHOE.z);
     this.discard.forEach((c, i) => c.place(DISCARD.x, 0.004 + i * 0.004, DISCARD.z, c.group.rotation.y));
-    this.app.fit(tall ? { x0: -2.65, x1: 2.65, z0: -4.5, z1: 3.6 } : { x0: -4.1, x1: 4.1, z0: -3.45, z1: 3.6 }, 'center');
+    // A short landscape phone has its buttons in a column at the right (style.css): the table uses the full height,
+    // framed from the dealer's total down to the bet ring, with the shoe moved down beside the dealer.
+    const rect = tall ? { x0: -2.65, x1: 2.65, z0: -4.5, z1: 3.6 } : short ? { x0: -4.1, x1: 4.1, z0: -3.15, z1: 3.4 } : { x0: -4.1, x1: 4.1, z0: -3.45, z1: 3.6 };
+    this.app.fit(rect, 'center', short ? { top: 54, bottom: 4 } : {});
     this.labels();
   }
   update() { return false; }
