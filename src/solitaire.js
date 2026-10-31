@@ -1,6 +1,6 @@
 // Klondike: draw 1 or 3, unlimited redeals, undo, hint, click-to-move, drag-and-drop, pad cursor, win cascade.
 import * as THREE from 'three';
-import { newDeck, shuffle, slotMesh, CARD_W, CARD_H } from './cards.js';
+import { newDeck, shuffle, slotMesh, jokerCard, CARD_W, CARD_H } from './cards.js';
 import { canvas, roundRect, C } from './art.js';
 import { tween, wait, ease } from './tween.js';
 
@@ -17,6 +17,8 @@ export class Solitaire {
     this.slots.found.forEach((m, i) => { m.position.x = colX(3 + i); m.userData.pile = { t: 'found', i }; });
     this.slots.tab.forEach((m, i) => { m.position.set(colX(i), 0.001, TABZ); m.userData.pile = { t: 'tab', i }; });
     this.root.add(this.slots.stock, ...this.slots.found, ...this.slots.tab);
+    // the two Jokers, set aside in the spare top-row column; not pickable, not part of the game
+    [[-0.05, 0.08], [0.05, -0.05]].forEach(([dx, yaw], i) => { const j = jokerCard(); j.place(colX(2) + dx, 0.001 + i * 0.0035, TOPZ, yaw); this.root.add(j.group); });
     this.pickables = [...this.cards.flatMap((c) => [c.front, c.back]), this.slots.stock, ...this.slots.found, ...this.slots.tab];
     this.cursor = makeCursor(); this.cursor.visible = false; this.root.add(this.cursor);
     this.cur = { row: 1, col: 0, depth: 0 }; this.held = null; this.padMode = false;

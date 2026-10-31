@@ -39,15 +39,39 @@ shows them and can reset them.
 
 ## The art, and where my real files go
 
-Everything is drawn procedurally on canvas. The table, tuck, back, chips and menus use the deck's design-system
-tokens (lagoon `#39979f`, midnight `#002a4f`, sunset-gold `#f5c364`, flamingo `#f0909c`, card-white `#fcfcfc`).
-The script lettering is Pacifico, the deck's typeface.
+**My real art is in.** The card back, my custom Ace of Spades, the Joker and the tuck front come from the USPCC print
+file (`art/source/Palm Tree Playing Cards.pdf`, git-ignored and never committed). `python tools/build_art.py` cuts
+them out (needs `pymupdf`, Pillow and numpy) and writes two sheets:
+
+| File | Size | Used on |
+|---|---|---|
+| `art/deck_hi.png` | 2048 × 1024 | desktop and tablets |
+| `art/deck_lo.png` | 1024 × 512 | phones (coarse pointer, shorter screen side under 700 px); `?tier=lo` or `?tier=hi` forces one |
+
+Each sheet is one row of four 512 × 1024 cells (256 × 512 on the phone sheet): back, AS, JK, tuck. A 5:7 card is
+stretched to fill its cell and the UVs undo the stretch. An 8 px gutter (4 px on the phone sheet) keeps mip levels
+from bleeding between cells. The sheets are powers of two, so three.js builds mipmaps for them. The print file's
+images are CMYK at about 396 dpi with a 1/8 in bleed; the script trims to 2.5 × 3.5 in, rounds the corners to match
+the canvas cards and adds the same hairline edge. The colours survive the conversion: the back's midnight comes out
+as `#002a50` against the `#002a4f` token.
+
+The print file has two identical black Jokers. Both lie in Solitaire's spare top-row column and one sits on the
+title screen; neither game deals them. (`uspcc_files/jokers.jpg` is an earlier proof with one red Joker; the print
+file has none.)
+
+**Everything else is still procedural**: the table, chips and menus use the deck's design-system tokens (lagoon
+`#39979f`, midnight `#002a4f`, sunset-gold `#f5c364`, flamingo `#f0909c`, card-white `#fcfcfc`), and the script
+lettering is Pacifico, the deck's typeface.
+
+**The other faces in the print file are Daniel Schneider's licensed redraws** (blackroses.cards sells them as print
+templates). They stay out of the game until I confirm my licence covers digital use; the build script never reads
+pages 3 to 5 or any card on page 2 except the Ace of Spades.
 
 **Faces** follow standard poker-deck conventions, not any particular deck's art: 180° rotational symmetry, corner
 indices top-left and bottom-right, standard pip grids with the lower half inverted, a split line on the courts, and
-the classic red/black/gold/blue palette on card-white. The Ace of Spades carries the palm-and-sun motif. The printed
-deck's courts are Daniel Schneider's licensed redraws; they are **not** copied or traced here. The courts in the
-game are placeholders.
+the classic red/black/gold/blue palette on card-white. The procedural Ace of Spades (used only if the real art is missing)
+carries the palm-and-sun motif. The printed deck's courts are Daniel Schneider's licensed redraws; they are **not**
+copied or traced here. The courts in the game are placeholders.
 
 The renderer is data-driven: every position, size and colour lives in `src/faces.js` (inches on a 2.5 × 3.5 in
 card), and `drawFace()` in `src/art.js` only reads it.
@@ -64,28 +88,33 @@ measurement from a USPCC deck: x 0.75 to 1.75 in, y 0.74 to 2.76 in, pips 0.43 i
 
 ### Where real art goes
 
-Put the files in `art/` and list them in `art/manifest.json`. Priority runs per-card `faces` first, then `atlas`,
-then procedural:
+List files in `art/manifest.json`. A value is a file in `art/`, or `sheet:<cell>` for a cell of the sheet; a missing
+or failed entry falls back to the procedural art. For faces, priority runs per-card `faces` first, then `atlas`,
+then procedural. This is the current manifest:
 
 ```json
 {
-  "back": "back.png",
-  "atlas": { "file": "faces_atlas.png", "suits": ["S", "H", "D", "C"], "ranks": ["J", "Q", "K"] },
-  "faces": { "AS": "ace_of_spades.png" }
+  "sheet": { "files": { "hi": "deck_hi.png", "lo": "deck_lo.png" }, "cell": [512, 1024], "gutter": 8,
+             "cells": ["back", "AS", "JK", "tuck"] },
+  "back": "sheet:back", "joker": "sheet:JK", "tuck": "sheet:tuck",
+  "atlas": null,
+  "faces": { "AS": "sheet:AS" }
 }
 ```
 
-- **`atlas`** is the slot for a licensed face set: one image in a grid, with one row per suit (in `suits` order) and
-  one column per rank (in `ranks` order; leave it out for all 13). Each cell is a whole card at 5:7. Give cells a few
-  pixels of transparent margin so mipmaps don't bleed into the neighbouring card.
+- **`atlas`** is the slot for a licensed face set (empty until the Schneider licence is confirmed): one image in a
+  grid, with one row per suit (in `suits` order) and one column per rank (in `ranks` order; leave it out for all
+  13), for example `{ "file": "faces_atlas.png", "suits": ["S", "H", "D", "C"], "ranks": ["J", "Q", "K"] }`. Each cell
+  is a whole card at 5:7. Give cells a few pixels of transparent margin so mipmaps don't bleed into the neighbouring
+  card.
 - **`faces`** overrides single cards. Keys are rank + suit (`A 2-10 J Q K` + `S H D C`).
-- All images are 5:7 portrait (for example 600×840 per card) with transparent rounded corners, because the card mesh
-  alpha-tests the texture.
+- Standalone card images are 5:7 portrait (for example 600×840) with transparent rounded corners, because the card
+  mesh alpha-tests the texture.
 
 ## Files
 
 `src/main.js` scene, camera fitting, input and gamepad · `src/cards.js` card meshes and flip/slide animation ·
 `src/art.js` all procedural art · `src/faces.js` face layout data · `src/solitaire.js` · `src/blackjack.js` · `src/audio.js` synthesised sounds ·
-`src/store.js` saves.
+`src/store.js` saves · `tools/build_art.py` cuts the texture sheets from the print file.
 
 Rendering only happens while something moves, so an idle table costs almost nothing on a phone.

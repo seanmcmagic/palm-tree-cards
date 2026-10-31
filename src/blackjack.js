@@ -1,8 +1,8 @@
 // Blackjack, one player against the dealer: 4-deck shoe, dealer stands on all 17s, blackjack pays 3:2,
 // dealer peeks on ace or ten, double on the first two cards. Chip bankroll persists in localStorage.
 import * as THREE from 'three';
-import { Card, CARD_H } from './cards.js';
-import { SUITS, C, FONT, canvas, drawTuck, drawChipTop } from './art.js';
+import { Card, CARD_H, tuckTexture } from './cards.js';
+import { SUITS, C, FONT, canvas, drawChipTop } from './art.js';
 import { tween, wait, ease } from './tween.js';
 
 const DECKS = 4, CUT = 52, SHOE = new THREE.Vector3(3.3, 0, -2.5), DISCARD = new THREE.Vector3(-3.3, 0, -2.5);
@@ -45,9 +45,8 @@ export class Blackjack {
   }
 
   buildTable() {
-    const tuckTex = new THREE.CanvasTexture(drawTuck()); tuckTex.colorSpace = THREE.SRGBColorSpace;
     const side = new THREE.MeshLambertMaterial({ color: C.midnight });
-    const shoe = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.6, 1.7), [side, side, new THREE.MeshLambertMaterial({ map: tuckTex }), side, side, side]);
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.6, 1.7), [side, side, new THREE.MeshLambertMaterial({ map: tuckTexture() }), side, side, side]);
     shoe.position.set(SHOE.x, 0.3, SHOE.z); shoe.rotation.y = 0.25; shoe.castShadow = shoe.receiveShadow = true; this.root.add(shoe); this.shoeMesh = shoe;
     // printed felt: the house rules between the hands, a ring for the bet
     const print = (w, h, draw, x, z) => {

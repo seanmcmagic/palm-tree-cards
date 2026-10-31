@@ -1,5 +1,13 @@
 {
-  "back": null,
+  "sheet": {
+    "files": { "hi": "deck_hi.png", "lo": "deck_lo.png" },
+    "cell": [512, 1024],
+    "gutter": 8,
+    "cells": ["back", "AS", "JK", "tuck"]
+  },
+  "back": "sheet:back",
+  "joker": "sheet:JK",
+  "tuck": "sheet:tuck",
   "atlas": null,
-  "faces": {}
+  "faces": { "AS": "sheet:AS" }
 }

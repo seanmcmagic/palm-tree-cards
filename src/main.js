@@ -1,7 +1,7 @@
 // Palm Tree Cards: scene, camera fitting, input (pointer, keyboard, Gamepad API), screens.
 import * as THREE from 'three';
-import { drawTable, drawTuck, C, CW, CH, roundRect, canvas } from './art.js';
-import { initCards, Card, CARD_H } from './cards.js';
+import { drawTable, C, CW, CH, roundRect, canvas } from './art.js';
+import { initCards, Card, CARD_H, jokerCard, tuckTexture } from './cards.js';
 import { tick } from './tween.js';
 import { unlockAudio, sfx } from './audio.js';
 import { store, save, resetStats } from './store.js';
@@ -98,16 +98,15 @@ function closeModal() { $('#modal').hidden = true; }
 // ---------- title scene ----------
 const titleRoot = new THREE.Group(); scene.add(titleRoot);
 function buildTitle() {
-  const tuckTex = new THREE.CanvasTexture(drawTuck()); tuckTex.colorSpace = THREE.SRGBColorSpace;
   const side = new THREE.MeshLambertMaterial({ color: C.midnight });
-  const tuck = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.36, 1.56), [side, side, new THREE.MeshLambertMaterial({ map: tuckTex }), side, side, side]);
+  const tuck = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.36, 1.56), [side, side, new THREE.MeshLambertMaterial({ map: tuckTexture() }), side, side, side]);
   tuck.position.set(-1.6, 0.18, 0.2); tuck.rotation.y = 0.22; tuck.castShadow = tuck.receiveShadow = true; titleRoot.add(tuck);
   const fan = [['S', 1], ['H', 13], ['D', 12], ['C', 11], ['S', 10]];
   fan.forEach(([s, r], i) => {
     const c = new Card(s, r); c.setFace(true); const a = (i - 2) * 0.22;
     c.place(1.1 + Math.sin(a) * 1.3, 0.01 + i * 0.006, 0.6 - Math.cos(a) * 1.3 + 1.0, -a); titleRoot.add(c.group);
   });
-  const b = new Card('S', 1); b.place(-0.1, 0.004, 1.3, 0.5); titleRoot.add(b.group);
+  const j = jokerCard(); j.place(-0.1, 0.004, 1.3, 0.5); titleRoot.add(j.group);
 }
 
 // ---------- screens ----------

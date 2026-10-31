@@ -183,6 +183,15 @@ export function drawTuck() {
   return c;
 }
 
+// Fallback Joker when no real art is listed: palm and script, the printed deck's layout.
+export function drawJoker() {
+  const [c, g] = canvas(CW, CH); cardBase(g);
+  const word = () => { g.fillStyle = C.midnight; g.font = `400 34px ${FONT.script}`; g.textAlign = 'left'; g.textBaseline = 'top'; g.fillText('Joker', 18, 10); };
+  word(); g.save(); g.translate(CW, CH); g.rotate(Math.PI); word(); g.restore();
+  drawPalm(g, CW / 2 - 10, CH / 2 + 90, 190, C.midnight);
+  return c;
+}
+
 export function drawTable(size = 1024) {
   const [c, g] = canvas(size, size);
   g.fillStyle = C.lagoon; g.fillRect(0, 0, size, size);

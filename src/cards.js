@@ -1,13 +1,15 @@
 // Card meshes: two alpha-tested planes back to back inside a flipper group.
-// Textures are procedural unless art/manifest.json names a real file for that slot.
+// Textures are procedural unless art/manifest.json names a real file (or a "sheet:" cell) for that slot.
 import * as THREE from 'three';
-import { drawFace, drawBack, drawSlot, SUITS, RANKS } from './art.js';
+import { drawFace, drawBack, drawSlot, drawJoker, drawTuck, SUITS, RANKS } from './art.js';
 import { tween, ease } from './tween.js';
 import { sfx } from './audio.js';
 
 export const CARD_W = 1, CARD_H = 1.4;
-let aniso = 1, backTex = null, atlasTex = null, manifest = { back: null, faces: {}, atlas: null };
+let aniso = 1, backTex = null, atlasTex = null, sheetTex = null, manifest = { back: null, faces: {}, atlas: null };
 const faceTex = new Map(), slotTex = new Map(), loader = new THREE.TextureLoader();
+// Texture tier: phones get the half-size sheet. ?tier=lo or ?tier=hi forces one.
+const TIER = new URLSearchParams(location.search).get('tier') || (matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 700 ? 'lo' : 'hi');
 
 function canvasTex(c) {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; return t;
@@ -15,12 +17,28 @@ function canvasTex(c) {
 function fileTex(url) { // real art: same 5:7 portrait aspect as the canvases, PNG with transparent corners
   const t = loader.load(url); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; return t;
 }
+// Sheet: one power-of-two image, a single row of equal cells (sheet.cells, in order), each with a gutter
+// of sheet.gutter pixels (of sheet.cell) that the UVs skip so mip levels don't bleed between cells.
+function sheetCell(name) {
+  const s = manifest.sheet, i = s?.cells?.indexOf(name) ?? -1; if (!sheetTex || i < 0) return null;
+  const [cw, ch] = s.cell, n = s.cells.length, g = s.gutter || 0, t = sheetTex.clone();
+  t.repeat.set((cw - 2 * g) / (cw * n), (ch - 2 * g) / ch); t.offset.set((i * cw + g) / (cw * n), g / ch); return t;
+}
+function artTex(ref, fallback) { // a manifest value: "sheet:<cell>", a file in art/, or nothing (procedural)
+  if (ref?.startsWith('sheet:')) return sheetCell(ref.slice(6)) || fallback();
+  return ref ? fileTex('art/' + ref) : fallback();
+}
 export async function initCards(renderer) {
   aniso = Math.min(4, renderer.capabilities.getMaxAnisotropy());
   try { const r = await fetch('art/manifest.json'); if (r.ok) manifest = { back: null, faces: {}, atlas: null, ...(await r.json()) }; } catch (e) { /* procedural only */ }
-  backTex = manifest.back ? fileTex('art/' + manifest.back) : canvasTex(drawBack());
+  const sf = manifest.sheet?.files; // waited for, so the first frame already has the real back
+  if (sf) try { sheetTex = await loader.loadAsync('art/' + (sf[TIER] || sf.hi)); sheetTex.colorSpace = THREE.SRGBColorSpace; sheetTex.anisotropy = aniso; } catch (e) { console.warn('art sheet failed to load; drawing procedurally', e); }
+  backTex = artTex(manifest.back, () => canvasTex(drawBack()));
   if (manifest.atlas?.file) atlasTex = fileTex('art/' + manifest.atlas.file);
 }
+let jokerTex = null, tuckTex = null;
+export const jokerTexture = () => (jokerTex ??= artTex(manifest.joker, () => canvasTex(drawJoker())));
+export const tuckTexture = () => (tuckTex ??= artTex(manifest.tuck, () => canvasTex(drawTuck())));
 export const cardKey = (suit, rank) => RANKS[rank - 1] + suit; // e.g. "QH", "10S"
 // Atlas slot: one image, a grid with one row per suit (atlas.suits) and one column per rank (atlas.ranks).
 // Each cell is a whole card at 5:7. Clones share the image, so it is uploaded to the GPU once.
@@ -33,7 +51,7 @@ function atlasCell(suit, rank) {
 }
 export function faceTexture(suit, rank) {
   const k = cardKey(suit, rank);
-  if (!faceTex.has(k)) faceTex.set(k, manifest.faces[k] ? fileTex('art/' + manifest.faces[k]) : atlasCell(suit, rank) || canvasTex(drawFace(suit, rank)));
+  if (!faceTex.has(k)) faceTex.set(k, artTex(manifest.faces[k], () => atlasCell(suit, rank) || canvasTex(drawFace(suit, rank))));
   return faceTex.get(k);
 }
 export function slotTexture(kind) {
@@ -89,6 +107,10 @@ export class Card {
   dispose() { this.frontMat.dispose(); this.backMat.dispose(); }
 }
 
+// Jokers don't play in either game; they lie on the table, set aside the way they come out of a real deck.
+export function jokerCard() {
+  const c = new Card('S', 1); c.joker = true; c.frontMat.map = jokerTexture(); c.setFace(true); return c;
+}
 export function newDeck() {
   const d = [];
   for (const s of SUITS) for (let r = 1; r <= 13; r++) d.push(new Card(s, r));
