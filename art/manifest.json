@@ -782,6 +782,285 @@
           }
         }
       }
+    },
+    {
+      "id": "summer",
+      "name": "Summer Edition",
+      "concept": true,
+      "source": "file-fZozkBvAJRkghUTzrX2PfunL.jpg",
+      "sheet": {
+        "files": {
+          "hi": "concepts/summer/sheet_hi.png",
+          "lo": "concepts/summer/sheet_lo.png"
+        },
+        "layouts": {
+          "hi": {
+            "cell": [
+              512,
+              1024
+            ],
+            "gutter": 8,
+            "cols": 2,
+            "rows": 1
+          },
+          "lo": {
+            "cell": [
+              256,
+              512
+            ],
+            "gutter": 4,
+            "cols": 2,
+            "rows": 1
+          }
+        },
+        "cells": [
+          "back",
+          "tuck"
+        ]
+      },
+      "back": "sheet:back",
+      "joker": null,
+      "faces": {},
+      "atlas": null,
+      "tuck": {
+        "front": "sheet:tuck",
+        "die": {
+          "files": {
+            "hi": "concepts/summer/tuck_hi.png",
+            "lo": "concepts/summer/tuck_lo.png"
+          },
+          "panels": {
+            "front": [
+              0.0,
+              0.0,
+              0.390625,
+              0.546875
+            ],
+            "back": [
+              0.390625,
+              0.0,
+              0.78125,
+              0.546875
+            ],
+            "left": [
+              0.78125,
+              0.0,
+              0.859375,
+              0.546875
+            ],
+            "right": [
+              0.859375,
+              0.0,
+              0.9375,
+              0.546875
+            ],
+            "top": [
+              0.0,
+              0.546875,
+              0.390625,
+              0.65625
+            ],
+            "tongue": [
+              0.390625,
+              0.546875,
+              0.78125,
+              0.65625
+            ],
+            "bottom": [
+              0.0,
+              0.65625,
+              0.390625,
+              0.765625
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "midnightwhite",
+      "name": "Midnight White",
+      "concept": true,
+      "source": "file-EkD1gpF1tnb2CmbzMfNImXWy.jpg",
+      "sheet": {
+        "files": {
+          "hi": "concepts/midnightwhite/sheet_hi.png",
+          "lo": "concepts/midnightwhite/sheet_lo.png"
+        },
+        "layouts": {
+          "hi": {
+            "cell": [
+              512,
+              1024
+            ],
+            "gutter": 8,
+            "cols": 2,
+            "rows": 1
+          },
+          "lo": {
+            "cell": [
+              256,
+              512
+            ],
+            "gutter": 4,
+            "cols": 2,
+            "rows": 1
+          }
+        },
+        "cells": [
+          "back",
+          "tuck"
+        ]
+      },
+      "back": "sheet:back",
+      "joker": null,
+      "faces": {},
+      "atlas": null,
+      "tuck": {
+        "front": "sheet:tuck",
+        "die": {
+          "files": {
+            "hi": "concepts/midnightwhite/tuck_hi.png",
+            "lo": "concepts/midnightwhite/tuck_lo.png"
+          },
+          "panels": {
+            "front": [
+              0.0,
+              0.0,
+              0.390625,
+              0.546875
+            ],
+            "back": [
+              0.390625,
+              0.0,
+              0.78125,
+              0.546875
+            ],
+            "left": [
+              0.78125,
+              0.0,
+              0.859375,
+              0.546875
+            ],
+            "right": [
+              0.859375,
+              0.0,
+              0.9375,
+              0.546875
+            ],
+            "top": [
+              0.0,
+              0.546875,
+              0.390625,
+              0.65625
+            ],
+            "tongue": [
+              0.390625,
+              0.546875,
+              0.78125,
+              0.65625
+            ],
+            "bottom": [
+              0.0,
+              0.65625,
+              0.390625,
+              0.765625
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "aceofspades",
+      "name": "Ace of Spades",
+      "concept": true,
+      "source": "file-wjrrGJSne8pxaLD6TQVu6YYL.jpg",
+      "sheet": {
+        "files": {
+          "hi": "concepts/aceofspades/sheet_hi.png",
+          "lo": "concepts/aceofspades/sheet_lo.png"
+        },
+        "layouts": {
+          "hi": {
+            "cell": [
+              512,
+              1024
+            ],
+            "gutter": 8,
+            "cols": 2,
+            "rows": 1
+          },
+          "lo": {
+            "cell": [
+              256,
+              512
+            ],
+            "gutter": 4,
+            "cols": 2,
+            "rows": 1
+          }
+        },
+        "cells": [
+          "back",
+          "tuck"
+        ]
+      },
+      "back": "sheet:back",
+      "joker": null,
+      "faces": {},
+      "atlas": null,
+      "tuck": {
+        "front": "sheet:tuck",
+        "die": {
+          "files": {
+            "hi": "concepts/aceofspades/tuck_hi.png",
+            "lo": "concepts/aceofspades/tuck_lo.png"
+          },
+          "panels": {
+            "front": [
+              0.0,
+              0.0,
+              0.390625,
+              0.546875
+            ],
+            "back": [
+              0.390625,
+              0.0,
+              0.78125,
+              0.546875
+            ],
+            "left": [
+              0.78125,
+              0.0,
+              0.859375,
+              0.546875
+            ],
+            "right": [
+              0.859375,
+              0.0,
+              0.9375,
+              0.546875
+            ],
+            "top": [
+              0.0,
+              0.546875,
+              0.390625,
+              0.65625
+            ],
+            "tongue": [
+              0.390625,
+              0.546875,
+              0.78125,
+              0.65625
+            ],
+            "bottom": [
+              0.0,
+              0.65625,
+              0.390625,
+              0.765625
+            ]
+          }
+        }
+      }
     }
   ],
   "boxes": {

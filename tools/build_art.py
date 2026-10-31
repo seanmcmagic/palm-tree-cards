@@ -291,6 +291,15 @@ CONCEPTS = [
     dict(id='navywinter', name='Navy Winter', file='OIG.jpeg',
          front=[(281, 190), (752, 190), (752, 822), (281, 822)], emblem=(0.15, 0.23, 0.85, 0.78),
          field=(31, 45, 74), frame=(230, 184, 181), board=(33, 47, 76)),
+    dict(id='summer', name='Summer Edition', file='file-fZozkBvAJRkghUTzrX2PfunL.jpg',
+         front=[(318, 250), (702, 250), (700, 775), (320, 775)], emblem=(0.15, 0.25, 0.85, 0.8),
+         field=(244, 176, 178), frame=(20, 80, 80), board=(240, 170, 172)),
+    dict(id='midnightwhite', name='Midnight White', file='file-EkD1gpF1tnb2CmbzMfNImXWy.jpg',
+         front=[(440, 123), (855, 287), (591, 873), (156, 686)], emblem=(0.15, 0.22, 0.85, 0.75),
+         field=(240, 238, 234), frame=(20, 20, 20), board=(236, 234, 230)),
+    dict(id='aceofspades', name='Ace of Spades', file='file-wjrrGJSne8pxaLD6TQVu6YYL.jpg',
+         front=[(269, 161), (748, 161), (748, 846), (274, 846)], emblem=(0.15, 0.25, 0.85, 0.78),
+         field=(244, 240, 232), frame=(150, 100, 50), board=(240, 236, 228)),
 ]
 
 

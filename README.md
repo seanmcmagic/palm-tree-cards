@@ -83,9 +83,9 @@ starts. Each row's tucks are one `InstancedMesh`, so a full brick is two draw ca
 hinges at the back wall so the logo wall faces you; on the dieline it hangs off the logo wall.
 
 **Concept decks (vote only).** `art/source/variants/` holds my deck mockups (almost all AI renders). Only the tuck
-exists for these, so they aren't playable: only Original and Winter are. Five concept tucks stand in the brick's
-spare slots, front row first (two fit in the half brick, all five in the full brick): Spring Edition, Fall Edition,
-Midnight Edition, White Ornate and Navy Winter. For each, the build script perspective-warps the tuck front out of one
+exists for these, so they aren't playable: only Original and Winter are. Eight concept tucks stand in the brick's
+spare slots, front row first (two fit in the half brick, all eight in the full brick): Spring Edition, Fall Edition,
+Midnight Edition, White Ornate, Navy Winter, Summer Edition, Midnight White and Ace of Spades. For each, the build script perspective-warps the tuck front out of one
 render (`CONCEPTS` in `tools/build_art.py` lists the corners). Tapping one shows the tuck large with **I'd buy this**;
 each tap adds a vote, kept in `localStorage` (`votes` in `palmtree-cards-v1`) on this device only, a demand test for
 which deck to print next. (The build still designs a matching back for each, in case one becomes playable.)
