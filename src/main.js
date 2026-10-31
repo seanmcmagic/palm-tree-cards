@@ -167,7 +167,7 @@ function show(which) {
   for (const [k, g] of Object.entries(games)) { if (k !== which) g.hide(); }
   app.clearLabels();
   current = which === 'title' ? null : games[which];
-  if (current) current.show(); else { titleBox.reset(); fitTitle(); titleBox.labels(true); }
+  if (current) current.show(); else { titleBox.reset(); titleBox.skin(store.settings.deck); fitTitle(); titleBox.labels(true); }
   syncTitleButtons(); clearFocus(); if (usingPad && which !== 'sol') focusFirst(); needRender = true;
 }
 function fitTitle() { // keep the box clear of the menu panel (below it, or left of it in short landscape)
@@ -199,7 +199,7 @@ function titleAction(act) {
   else if (act === 'blackjack') launch('bj');
   else if (act === 'deck') { // cycle editions; a game in progress switches look too
     const eds = editions(), i = eds.findIndex((e) => e.id === store.settings.deck);
-    store.settings.deck = eds[(i + 1) % eds.length].id; save(); syncTitleButtons(); setEdition(store.settings.deck); sfx.tap();
+    store.settings.deck = eds[(i + 1) % eds.length].id; save(); syncTitleButtons(); setEdition(store.settings.deck); titleBox.skin(store.settings.deck); sfx.tap();
   }
   else if (act === 'drawmode') { store.settings.draw = store.settings.draw === 1 ? 3 : 1; save(); syncTitleButtons(); app.toast(`Solitaire: draw ${store.settings.draw} (from the next deal)`); }
   else if (act === 'sound') { store.settings.sound = !store.settings.sound; save(); syncTitleButtons(); sfx.tap(); }

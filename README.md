@@ -45,7 +45,7 @@ The game has **editions**: a deck is a back, faces, an optional Joker and a tuck
 | Edition | Source (in `art/source/`, git-ignored, never committed) | What the game uses |
 |---|---|---|
 | **Original** (2020, USPCC) | `Palm Tree Playing Cards.pdf`, the print file: p1 tuck dieline, back, Joker ×2 (same image); p2–p5 one suit each | my back, my custom Ace of Spades, the Joker, the tuck. The other faces are the standard procedural ones (see below) |
-| **Winter** (Fiverr commission, all rights mine) | `winter/`: 52 face `.ai` files, `Back.ai`, `Box Design.ai`, a mockup jpg | its back, all 52 faces, its tuck. It has no Jokers, so Solitaire's set-aside Jokers hide |
+| **Winter** (Fiverr commission, all rights mine) | `winter/`: 52 face `.ai` files; `winter-album/`: my Google Photos album (print sheets, a render, photos of the printed tuck, brick dielines) | the 52 Fiverr faces, plus from the album the navy-and-pink back, the custom Ace of Spades, the Joker, the tuck and its own pink-and-navy brick. The Fiverr `Back.ai` and `Box Design.ai` are an earlier pale-blue design and are not used |
 
 `python tools/build_art.py` (needs `pymupdf`, Pillow and numpy) builds every texture and writes
 `art/manifest.json` to match. The `.ai` files are PDF-compatible, so PyMuPDF rasterises them like the print file;
@@ -75,7 +75,7 @@ Box.png`, mapped onto the clean art layer through the back panel's white frame; 
 `Box Design.ai`. The lid and tongue hang off the front's top edge, the bottom off the back, as on the dielines.
 
 **The title is an open brick box** (`src/boxes.js`) using the beach art from `uspcc_files/Half Brick Box (1).jpg` and
-`Full Brick Box.jpg`, which turned out to be flat dielines rather than renders. Phones get the half brick (6 tucks),
+`Full Brick Box.jpg`, which turned out to be flat dielines rather than renders. The box wears the chosen deck's brick (Winter has its own; the others use the Original's beach brick). Phones get the half brick (6 tucks),
 everything else the full brick (12); `?box=half` or `?box=brick` forces one. Each row is an edition and each column a
 game; the columns past the games hold spare decks for games still to come. Tap a tuck (or use the Solitaire and
 Blackjack buttons, which use the Deck setting): it lifts out, the lid opens and the deck slides out, then the game

@@ -5,7 +5,7 @@
 // marked concept) stand in the spare columns, front row first, as "coming soon" tucks.
 import * as THREE from 'three';
 import { C } from './art.js';
-import { CARD_W, CARD_H, editions, loadTiered, manifestBoxes, tuckTexture, backTexture } from './cards.js';
+import { CARD_W, CARD_H, editions, editionDef, loadTiered, manifestBoxes, tuckTexture, backTexture } from './cards.js';
 import { tween, ease } from './tween.js';
 import { sfx } from './audio.js';
 
@@ -101,22 +101,7 @@ export class TitleBox {
     this.kind = kind; this.cols = cols; this.rows = rows;
     const W = cols * TW + (cols + 1) * GAP, D = rows * TD + (rows + 1) * GAP + 0.1;
     this.W = W; this.D = D;
-    // the box: printed outside, plain board inside, lid swung open behind
-    const boxArt = boxes[kind] && (await loadTiered(boxes[kind].files));
-    const outMat = boxArt ? new THREE.MeshLambertMaterial({ map: boxArt }) : new THREE.MeshLambertMaterial({ color: C.midnight });
-    const P = boxes[kind]?.panels || { front: FULL, back: FULL, left: FULL, right: FULL, lid: FULL };
-    const walls = new THREE.Mesh(boxGeometry(P, W, D, WALL), outMat);
-    const board = new THREE.MeshLambertMaterial({ color: C.midnight, side: THREE.BackSide });
-    const inside = new THREE.Mesh(new THREE.BoxGeometry(W - 0.02, WALL * 2, D - 0.02), board); // insides of the walls
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(W - 0.02, D - 0.02).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: C.midnight }));
-    floor.position.y = 0.003; floor.receiveShadow = true;
-    // On the dieline the lid hangs off the logo wall; here it hinges at the back so the logo wall faces you.
-    const lid = new THREE.Group(); lid.position.set(0, WALL, -D / 2);
-    const lidTop = geometry((q) => q([-W / 2, 0, D], [W / 2, 0, D], [W / 2, 0, 0], [-W / 2, 0, 0], P.lid, [0, 1, 0]));
-    lid.add(new THREE.Mesh(lidTop, outMat), new THREE.Mesh(lidTop, board));
-    lid.rotation.x = -1.95; // swung back past upright
-    walls.castShadow = walls.receiveShadow = true; lid.children[0].castShadow = true;
-    this.root.add(walls, inside, floor, lid);
+    await this.skin(this.app.store.settings.deck);
     // the tucks: one instanced mesh per edition, a row each (front row first)
     this.arts = []; this.meshes = [];
     for (let r = 0; r < rows; r++) {
@@ -140,6 +125,28 @@ export class TitleBox {
     }
     this.opener = null; this.artOpeners = new Map();
     return this;
+  }
+  // The box itself, printed with the chosen deck's brick art (an edition's own boxes, else the Original's beach
+  // bricks): printed outside, plain board inside, lid swung open behind. Rebuilt when the deck changes.
+  async skin(edId) {
+    const { kind, W, D } = this, own = editionDef(edId).boxes || {}, die = own[kind] || manifestBoxes()[kind];
+    const key = die?.files?.hi || 'plain'; if (key === this.skinKey) return; this.skinKey = key;
+    const boxArt = die && (await loadTiered(die.files));
+    if (this.shell) { this.root.remove(this.shell); this.shell.traverse((o) => { o.geometry?.dispose(); o.material?.dispose?.(); }); }
+    const outMat = boxArt ? new THREE.MeshLambertMaterial({ map: boxArt }) : new THREE.MeshLambertMaterial({ color: C.midnight });
+    const P = die?.panels || { front: FULL, back: FULL, left: FULL, right: FULL, lid: FULL };
+    const walls = new THREE.Mesh(boxGeometry(P, W, D, WALL), outMat);
+    const board = new THREE.MeshLambertMaterial({ color: C.midnight, side: THREE.BackSide });
+    const inside = new THREE.Mesh(new THREE.BoxGeometry(W - 0.02, WALL * 2, D - 0.02), board); // insides of the walls
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(W - 0.02, D - 0.02).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: C.midnight }));
+    floor.position.y = 0.003; floor.receiveShadow = true;
+    // On the dieline the lid hangs off the logo wall; here it hinges at the back so the logo wall faces you.
+    const lid = new THREE.Group(); lid.position.set(0, WALL, -D / 2);
+    const lidTop = geometry((q) => q([-W / 2, 0, D], [W / 2, 0, D], [W / 2, 0, 0], [-W / 2, 0, 0], P.lid, [0, 1, 0]));
+    lid.add(new THREE.Mesh(lidTop, outMat), new THREE.Mesh(lidTop, board));
+    lid.rotation.x = -1.95; // swung back past upright
+    walls.castShadow = walls.receiveShadow = true; lid.children[0].castShadow = true;
+    this.shell = new THREE.Group(); this.shell.add(walls, inside, floor, lid); this.root.add(this.shell); this.app.dirty();
   }
   bounds() { // what the title camera must keep in view: row labels on the left, the leaning lid, raised tucks
     const back = this.D * Math.cos(Math.PI - 1.95), top = Math.max((this.rows - 1) * RISE + TH + 0.3, WALL + this.D * Math.sin(1.95));

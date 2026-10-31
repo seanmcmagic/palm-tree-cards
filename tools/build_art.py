@@ -9,8 +9,11 @@ Editions (a deck = back + faces + tuck), each into art/<edition>/:
               p1 tuck dieline art (1570x1570), card back, Joker (x2, same image); p2-p5 spades, diamonds, clubs,
               hearts. Only MY art is taken: back, custom Ace of Spades (p2 top-left), Joker, tuck. The other faces
               are Daniel Schneider's licensed redraws and stay out until the licence covers digital use.
-  winter    Winter Edition (Fiverr commission, all rights mine): winter/<Suit>/<Suit>/<Rank>.ai, Back, Box.
-              The .ai files are PDF-compatible; each card page is 196x266 pt with the 180x252 pt trim centred.
+  winter    Winter Edition (Fiverr commission, all rights mine). Faces: winter/<Suit>/<Suit>/<Rank>.ai (PDF-compatible;
+              each page is 196x266 pt with the 180x252 pt trim centred). The printed deck changed after those files:
+              its navy-and-pink back and tuck, custom Ace of Spades, Joker and brick come from my album
+              (winter-album/: the print sheets, a render, photos of the printed tuck, the brick dielines). The
+              Fiverr Back.ai and Box Design.ai are the earlier pale-blue design and are no longer used.
   concepts  Deck ideas from my mockups in variants/ (mostly AI renders): a back and a tuck cut from one render each,
               standard faces. They sit in the brick's spare slots as "coming soon" decks with an "I'd buy this" vote.
 Boxes (the title menu), into art/box/: the half brick (6 decks) and brick (12 decks) dielines.
@@ -197,13 +200,43 @@ def original():
     }
 
 
+# Winter album sources (winter-album/, numbered as downloaded). Quads are TL, TR, BR, BL in the image's pixels.
+WA = {
+    'back_render': ('01 ', [(700, 672), (1478, 548), (1554, 1462), (697, 1600)]),  # the card back in the mockup render
+    'tuck_photo': ('04 ', [(1103, 861), (2333, 822), (2356, 2578), (1105, 2565)]),  # the printed tuck front, in hand (inset past its edges)
+    'back_sheet': '10 ', 'face_sheet': '11 ',  # uncut print sheets: 8 x 7 cards, centres from (201, 229), pitch 166 x 223
+    'half': ('12 ', dict(front=(700, 286, 1090, 540), back=(46, 286, 436, 540), left=(436, 286, 700, 540),
+                         right=(1090, 286, 1354, 540), lid=(700, 22, 1090, 286))),
+    'brick': ('13 ', dict(front=(885, 408, 1458, 666), back=(47, 408, 620, 666), left=(620, 408, 885, 666),
+                          right=(1458, 408, 1727, 666), lid=(885, 143, 1458, 408))),
+}
+
+
+def album(prefix):
+    return Image.open(next((SRC / 'winter-album').glob(prefix + '*'))).convert('RGB')
+
+
+def sheet_card(img, col, row):
+    """One card off an uncut print sheet (about 125 x 175 px each)."""
+    cx, cy, w, h = 201 + col * 166.3, 229 + row * 223.3, 126, 176
+    return img.crop((round(cx - w / 2), round(cy - h / 2), round(cx + w / 2), round(cy + h / 2)))
+
+
+def match_colour(img, ref):
+    """Scale img's channels so its mean matches ref's (the render is lit; the print sheet is the true colour)."""
+    a = np.asarray(img, float); m = a.reshape(-1, 3).mean(0); r = np.asarray(ref, float).reshape(-1, 3).mean(0)
+    return Image.fromarray(np.clip(a * (r / m), 0, 255).astype(np.uint8))
+
+
 def winter():
     names = {'A': 'ace', 'J': 'jack', 'Q': 'queen', 'K': 'king'}
     folders = {'S': 'spades', 'H': 'Hearts', 'D': 'Diamonds', 'C': 'Clubs'}
-    pt = 4  # render the box at 4 px per point; the panel rects are in points
-    die = ai_page(WINTER / 'Box' / 'Box' / 'Box Design.ai', 72 * pt)
-    panels = {k: tuple(v * pt for v in r) for k, r in TUCK_PANELS['winter'].items()}
-    cells = {'back': winter_card(WINTER / 'Back' / 'Back' / 'Back.ai'), 'tuck': die.crop(tuple(round(v) for v in panels['front']))}
+    backs, faces = album(WA['back_sheet']), album(WA['face_sheet'])
+    flat_back = sheet_card(backs, 3, 3)
+    f, q = WA['back_render']; back = match_colour(rectify(album(f), q, (500, 700)), flat_back)
+    f, q = WA['tuck_photo']; front = rectify(album(f), q, (500, 700))
+    navy = tuple(int(v) for v in np.asarray(front.crop((8, 8, 30, 680))).reshape(-1, 3).mean(0))  # the tuck's border
+    cells = {'back': back, 'tuck': front}
     for s in SUITS:
         d = WINTER / folders[s] / folders[s]
         for r in RANKS:
@@ -212,11 +245,19 @@ def winter():
             if path is None:
                 sys.exit(f'winter: no file for {r}{s} in {d}')
             cells[r + s] = winter_card(path)
+    cells['AS'] = sheet_card(faces, 2, 0)  # the printed custom Ace of Spades (the Fiverr Ace.ai is a plain one)
+    cells['JK'] = sheet_card(faces, 1, 0)
+    out = ROOT / 'art' / 'winter'
+    boxes = {}
+    for kind in ('half', 'brick'):
+        f, panels = WA[kind]
+        boxes[kind] = die_atlas(album(f), panels, out, kind, (2048, 1024))
     return {
         'id': 'winter', 'name': 'Winter',
         'sheet': card_sheet('winter', cells, ((256, 512), 6, 16), lo=((256, 256), 4, 8)),
-        'back': 'sheet:back', 'joker': None, 'faces': 'sheet', 'atlas': None,
-        'tuck': {'front': 'sheet:tuck', 'die': die_atlas(die, panels, ROOT / 'art' / 'winter', 'tuck', (1024, 1024))},
+        'back': 'sheet:back', 'joker': 'sheet:JK', 'faces': 'sheet', 'atlas': None,
+        'tuck': {'front': 'sheet:tuck', 'die': concept_tuck(front, back, None, navy, out)},
+        'boxes': boxes,
     }
 
 
