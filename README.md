@@ -166,3 +166,7 @@ and the games pick it up with no other code. An edition entry:
 `src/store.js` saves · `src/boxes.js` tucks, brick boxes and the title menu · `tools/build_art.py` builds every texture and the manifest.
 
 Rendering only happens while something moves, so an idle table costs almost nothing on a phone.
+
+## Licence
+
+Code is MIT; the art in `art/` is all rights reserved. See [LICENSE](LICENSE).
