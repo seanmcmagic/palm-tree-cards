@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#002a4f">
+<title>Palm Tree Cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito+Sans:wght@400;700;800;900&family=Yellowtail&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/style.css">
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js" } }</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="labels"></div>
+
+<!-- Title -->
+<section id="title" class="layer">
+  <div class="panel title-panel">
+    <h1 class="wordmark">Palm Tree</h1>
+    <p class="sub">playing cards</p>
+    <div class="menu">
+      <button class="btn big" data-act="solitaire">Solitaire</button>
+      <button class="btn big" data-act="blackjack">Blackjack</button>
+      <div class="row">
+        <button class="btn" data-act="drawmode" id="drawModeBtn">Draw 1</button>
+        <button class="btn" data-act="sound" id="soundBtn">Sound on</button>
+        <button class="btn" data-act="stats">Stats</button>
+      </div>
+    </div>
+    <p class="edition">2020</p>
+  </div>
+</section>
+
+<!-- Solitaire HUD -->
+<section id="solHud" class="layer hud" hidden>
+  <div class="bar top">
+    <button class="btn sm" data-act="menu">Menu</button>
+    <span class="readout"><b id="solMoves">0</b> moves · <b id="solTime">0:00</b></span>
+    <button class="btn sm" data-act="new">New</button>
+  </div>
+  <div class="bar bottom">
+    <button class="btn" data-act="undo" id="undoBtn">Undo</button>
+    <button class="btn" data-act="hint">Hint</button>
+    <button class="btn" data-act="auto" id="autoBtn" hidden>Finish</button>
+  </div>
+</section>
+
+<!-- Blackjack HUD -->
+<section id="bjHud" class="layer hud" hidden>
+  <div class="bar top">
+    <button class="btn sm" data-act="menu">Menu</button>
+    <span class="readout">Bank <b id="bjBank">500</b> · Bet <b id="bjBet">0</b></span>
+    <span class="readout dim" id="bjShoe"></span>
+  </div>
+  <div class="bar bottom" id="bjBetBar">
+    <button class="btn chip c5" data-act="chip" data-v="5">5</button>
+    <button class="btn chip c25" data-act="chip" data-v="25">25</button>
+    <button class="btn chip c100" data-act="chip" data-v="100">100</button>
+    <button class="btn" data-act="clear">Clear</button>
+    <button class="btn primary" data-act="deal" id="dealBtn">Deal</button>
+  </div>
+  <div class="bar bottom" id="bjPlayBar" hidden>
+    <button class="btn primary" data-act="hit">Hit</button>
+    <button class="btn" data-act="stand">Stand</button>
+    <button class="btn" data-act="double" id="doubleBtn">Double</button>
+  </div>
+  <div class="bar bottom" id="bjBrokeBar" hidden>
+    <button class="btn primary" data-act="rebuy">Rebuy 500</button>
+  </div>
+  <div id="bjBanner" class="banner" hidden></div>
+</section>
+
+<!-- Modal -->
+<section id="modal" class="layer" hidden>
+  <div class="panel modal-panel">
+    <h2 id="modalTitle"></h2>
+    <div id="modalBody"></div>
+    <div class="row" id="modalBtns"></div>
+  </div>
+</section>
+
+<div id="toast" hidden></div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

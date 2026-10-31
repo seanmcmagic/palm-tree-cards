@@ -1,0 +1,83 @@
+/* Tokens from the Palm Tree Playing Cards design system (tokens.json, 2026-10-30). */
+:root {
+  --lagoon: #39979f; --lagoon-deep: #2f7c8b; --lagoon-deep-dark: #4fb0b8;
+  --midnight: #002a4f; --midnight-deep: #001b33;
+  --sunset-gold: #f5c364; --flamingo: #f0909c; --card-white: #fcfcfc;
+  --ink-muted-dark: #b7c8d6; --hairline-dark: #1d4166;
+  --script: "Yellowtail", "Brush Script MT", cursive;
+  --display: "Lilita One", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --body: "Nunito Sans", system-ui, sans-serif;
+  --radius-card: 12px; --radius-round: 999px;
+  --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--lagoon); color: var(--card-white);
+  font: 400 17px/26px var(--body); user-select: none; -webkit-user-select: none; overscroll-behavior: none; }
+#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.layer { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.layer[hidden] { display: none; }
+.layer > * { pointer-events: auto; }
+.hud > * { pointer-events: none; }
+.hud .btn, .hud .banner { pointer-events: auto; }
+
+.panel { background: var(--midnight); border-radius: 20px; padding: 32px; box-shadow: 0 18px 50px rgba(0,27,51,.45);
+  text-align: center; max-width: min(92vw, 460px); }
+#title { align-items: flex-end; padding: 16px 16px calc(var(--safe-b) + 28px); }
+.title-panel { padding: 28px 32px 20px; }
+@media (orientation: landscape) and (max-height: 560px) {
+  #title { align-items: center; justify-content: flex-end; padding: 12px 24px; }
+  .title-panel { padding: 14px 24px 10px; }
+  .wordmark { font-size: 48px; } .sub { font-size: 26px; margin-bottom: 10px; } .edition { display: none; }
+}
+.wordmark { font: 400 64px/1.1 var(--script); color: var(--sunset-gold); margin: 0; }
+.sub { font: 400 32px/1.2 var(--script); color: var(--flamingo); margin: -6px 0 18px; }
+.edition { font: 400 40px/1 var(--display); color: var(--sunset-gold); margin: 14px 0 0; opacity: .9; }
+.menu { display: flex; flex-direction: column; gap: 10px; }
+.row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+.btn { font: 800 15px/1 var(--body); letter-spacing: .02em; color: var(--midnight); background: var(--card-white);
+  border: 0; border-radius: var(--radius-round); padding: 12px 18px; min-height: 44px; min-width: 44px; cursor: pointer;
+  box-shadow: 0 3px 0 rgba(0,27,51,.35); transition: transform .08s, box-shadow .08s, background .15s; }
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,27,51,.35); }
+.btn.big { font: 400 26px/1 var(--display); padding: 14px 22px; background: var(--sunset-gold); }
+.btn.primary { background: var(--sunset-gold); }
+.btn.sm { padding: 8px 14px; min-height: 38px; font-size: 14px; }
+.btn[disabled] { opacity: .45; pointer-events: none; }
+.btn.focus, .btn:focus-visible { outline: 3px solid var(--flamingo); outline-offset: 3px; }
+.btn.chip { border-radius: 50%; width: 52px; height: 52px; padding: 0; font: 400 18px/1 var(--display);
+  border: 4px dashed rgba(252,252,252,.85); }
+.chip.c5 { background: var(--flamingo); color: var(--midnight); }
+.chip.c25 { background: var(--lagoon-deep); color: var(--card-white); }
+.chip.c100 { background: var(--midnight); color: var(--sunset-gold); }
+
+.bar { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 8px 12px; }
+.bar.top { top: calc(var(--safe-t) + 4px); justify-content: space-between; }
+.bar.bottom { bottom: calc(var(--safe-b) + 10px); }
+.bar[hidden] { display: none; }
+.readout { font: 700 15px/1 var(--body); background: rgba(0,42,79,.78); padding: 10px 14px; border-radius: var(--radius-round); }
+.readout b { font-family: var(--display); font-weight: 400; color: var(--sunset-gold); font-size: 17px; }
+.readout.dim { opacity: .8; font-size: 13px; }
+.readout:empty { display: none; }
+
+.banner { position: absolute; top: 46%; left: 50%; transform: translate(-50%,-50%); font: 400 40px/1.05 var(--display);
+  color: var(--sunset-gold); background: var(--midnight); padding: 14px 26px; border-radius: 16px; white-space: nowrap;
+  box-shadow: 0 10px 30px rgba(0,27,51,.45); animation: pop .35s cubic-bezier(.3,1.6,.5,1); }
+.banner small { display: block; font: 700 15px/1.4 var(--body); color: var(--card-white); }
+.banner.flamingo { color: var(--flamingo); }
+@keyframes pop { from { transform: translate(-50%,-50%) scale(.6); opacity: 0; } }
+
+#modal { background: rgba(0,27,51,.45); pointer-events: auto; }
+.modal-panel h2 { font: 400 40px/1.05 var(--display); color: var(--sunset-gold); margin: 0 0 12px; }
+#modalBody { color: var(--card-white); margin-bottom: 18px; }
+#modalBody table { margin: 0 auto 6px; border-collapse: collapse; font-size: 15px; }
+#modalBody td { padding: 3px 10px; text-align: left; }
+#modalBody td:last-child { text-align: right; font-family: var(--display); color: var(--sunset-gold); }
+#modalBody h3 { font: 400 26px/1.2 var(--script); color: var(--flamingo); margin: 8px 0 2px; }
+
+#labels { position: fixed; inset: 0; pointer-events: none; }
+.hand-label { position: absolute; transform: translate(-50%, -50%); font: 400 20px/1 var(--display); color: var(--midnight);
+  background: var(--sunset-gold); border-radius: var(--radius-round); padding: 6px 12px; white-space: nowrap; }
+.hand-label.bust { background: var(--flamingo); }
+
+#toast { position: fixed; left: 50%; top: calc(var(--safe-t) + 64px); transform: translateX(-50%); background: var(--midnight);
+  color: var(--card-white); font: 700 15px/1 var(--body); padding: 10px 16px; border-radius: var(--radius-round); pointer-events: none; }
