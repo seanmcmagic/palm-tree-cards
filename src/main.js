@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { drawTable, C, CW, CH, roundRect, canvas } from './art.js';
 import { initCards, CARD_H, TIER, editions, editionDef, setEdition } from './cards.js';
 import { TitleBox } from './boxes.js';
+import { openMusic, closeMusic, musicOpen } from './music.js';
 import { tick } from './tween.js';
 import { unlockAudio, sfx } from './audio.js';
 import { store, save, resetStats } from './store.js';
@@ -140,11 +141,24 @@ async function buildTitle() {
 // Start a game with a deck: the tuck comes out of the box and opens while the edition's textures load.
 async function launch(gameId, edId = store.settings.deck) {
   if (titleBox.busy || $('#title').hidden) return;
+  if (gameId === 'sol' && !launch.drawPicked) return klondikeModal(edId);
+  launch.drawPicked = false;
   store.settings.deck = editionDef(edId).id; save(); syncTitleButtons();
   const at = titleBox.slotOf(store.settings.deck), ready = setEdition(store.settings.deck);
   if (at) await titleBox.open(at[0], at[1] ?? GAMES.findIndex((g) => g.id === gameId), ready);
   else await ready; // a concept the half brick has no room for: straight in
   show(gameId); titleBox.reset();
+  if (gameId === 'sol' && games.sol.draw !== store.settings.draw) games.sol.newGame(); // a game dealt for the other mode
+}
+// Klondike asks Draw 1 or Draw 3 each time; the last choice is the highlighted one.
+function klondikeModal(edId) {
+  const pick = (n) => () => { store.settings.draw = n; save(); launch.drawPicked = true; launch('sol', edId); };
+  const cur = store.settings.draw;
+  app.modal('Klondike', '<p>Turn one card at a time, or three.</p>', [
+    { label: 'Draw 1', primary: cur === 1, run: pick(1) },
+    { label: 'Draw 3', primary: cur === 3, run: pick(3) },
+    { label: 'Cancel' },
+  ]);
 }
 // A concept deck: not printed yet. Play it with standard faces, or say you'd buy it. Votes are counted on this
 // device only (store.votes) until there is a server: a demand test for which deck to print next.
@@ -178,7 +192,6 @@ function fitTitle() { // keep the box clear of the menu panel (below it, or left
   app.fitBounds(titleBox.bounds(), m);
 }
 function syncTitleButtons() {
-  $('#drawModeBtn').textContent = `Draw ${store.settings.draw}`;
   $('#soundBtn').textContent = store.settings.sound ? 'Sound on' : 'Sound off';
   const d = editionDef(store.settings.deck); $('#deckBtn').textContent = `Deck: ${d.name}${d.concept ? ' (concept)' : ''}`;
 }
@@ -197,11 +210,11 @@ function statsHtml() {
 function titleAction(act) {
   if (act === 'solitaire') launch('sol');
   else if (act === 'blackjack') launch('bj');
+  else if (act === 'music') { musicOpen() ? closeMusic() : openMusic(app); sfx.tap(); }
   else if (act === 'deck') { // cycle editions; a game in progress switches look too
     const eds = editions(), i = eds.findIndex((e) => e.id === store.settings.deck);
     store.settings.deck = eds[(i + 1) % eds.length].id; save(); syncTitleButtons(); setEdition(store.settings.deck); titleBox.skin(store.settings.deck); sfx.tap();
   }
-  else if (act === 'drawmode') { store.settings.draw = store.settings.draw === 1 ? 3 : 1; save(); syncTitleButtons(); app.toast(`Solitaire: draw ${store.settings.draw} (from the next deal)`); }
   else if (act === 'sound') { store.settings.sound = !store.settings.sound; save(); syncTitleButtons(); sfx.tap(); }
   else if (act === 'stats') app.modal('Stats', statsHtml(), [
     { label: 'Close', primary: true },

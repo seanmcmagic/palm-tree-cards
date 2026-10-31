@@ -27,7 +27,7 @@ fonts fall back to system faces.
 
 ## Rules
 
-- **Solitaire:** Klondike, draw 1 or draw 3 (toggle on the title screen, applies from the next deal), unlimited
+- **Solitaire:** Klondike, draw 1 or draw 3 (asked each time you start Solitaire; picking the other mode deals afresh), unlimited
   redeals. Undo goes back up to 300 moves. When the stock and waste are empty and every card is face up, it finishes
   itself. A "No more moves" check offers undo or a new deal. Abandoning a started game counts as a loss.
 - **Blackjack:** 4-deck shoe, reshuffled when 52 cards remain. Dealer stands on all 17s and peeks on an ace or a ten.
@@ -82,16 +82,21 @@ Blackjack buttons, which use the Deck setting): it lifts out, the lid opens and 
 starts. Each row's tucks are one `InstancedMesh`, so a full brick is two draw calls for the tucks. On the box the lid
 hinges at the back wall so the logo wall faces you; on the dieline it hangs off the logo wall.
 
-**Concept decks ("coming soon").** `art/source/variants/` holds my deck mockups (52 images, almost all AI renders, and
-4 videos of the printed Original; 8 of the `.jpg` files are really HEIC). Four concepts are in the game: Summer
-Edition (the Apr 2026 patterned tuck), Midnight Edition (black and gold), Palm Springs, and Navy Winter (a navy-and-rose
-render whose box reads "Winter Edition", renamed so it doesn't clash with the real Winter deck). For each, the build
-script perspective-warps the tuck front out of one render (`CONCEPTS` in `tools/build_art.py` lists the corners). The back is the
-render's own box back where one is shown (Summer); otherwise it is the front's emblem on a field with a frame. Faces
-are the standard ones. They stand in the brick's spare columns, front row first (two fit in the half brick, four in
-the full brick). Tapping one opens a card with Solitaire, Blackjack and **I'd buy this**; each tap adds a vote, kept in
-`localStorage` (`votes` in `palmtree-cards-v1`) on this device only, a demand test for which deck to print next. The
-Deck button cycles through concepts too.
+**Concept decks ("coming soon").** `art/source/variants/` holds my deck mockups (almost all AI renders). Six concepts
+are in the game, in this order: Spring Edition, Fall Edition, Midnight Edition, White Ornate, Palm Springs and Navy
+Winter. For each, the build script perspective-warps the tuck front out of one render (`CONCEPTS` in
+`tools/build_art.py` lists the corners). The renders show no card backs, so each back is designed to match its tuck:
+a white border, the tuck's colour under a fine lattice, a double frame and corner lozenges in its accent colour, and
+an oval medallion holding the tuck's emblem. Faces are the standard ones. They stand in the brick's spare slots, front
+row first (two fit in the half brick, six in the full brick). Tapping one opens a card with Solitaire, Blackjack and
+**I'd buy this**; each tap adds a vote, kept in `localStorage` (`votes` in `palmtree-cards-v1`) on this device only,
+a demand test for which deck to print next. The Deck button cycles through concepts too.
+
+**Music.** The title's Music button opens a small YouTube player (privacy-enhanced embed) playing my albums, The
+McMagic Mixtape and It's a Beautiful Day, with previous, play/pause, next and an album switch. YouTube's terms want
+the player visible while it plays, so it stays in a 240 x 200 panel; closing the panel pauses it. Albums are listed in
+`MUSIC.albums` in `src/music.js` (a playlist id each); `?music=<playlist id>` plays any playlist for testing. It needs
+an internet connection.
 
 The Original print file has two identical black Jokers; both lie in Solitaire's spare top-row column and neither
 game deals them. (`uspcc_files/jokers.jpg` is an earlier proof with one red Joker; the print file has none.)

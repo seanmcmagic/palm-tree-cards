@@ -89,3 +89,11 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: var(--lagoon
 .hand-label.title-label.concept-label { font: 800 12px/1.2 var(--body); color: var(--midnight); background: var(--sunset-gold); padding: 3px 8px; text-shadow: none; }
 #modal .votes { font: 400 22px/1.2 var(--script); color: var(--flamingo); margin: 8px 0 0; }
 @media (max-width: 500px) { .hand-label.title-label.concept-label { font-size: 10px; padding: 2px 6px; } .hand-label.title-label { font-size: 17px; } .hand-label.title-label.edition-label { font-size: 15px; } }
+/* music panel: bottom-left, above the game; YouTube wants the player visible (200 x 200 or larger) while it plays */
+.music-panel { position: fixed; left: 12px; bottom: calc(var(--safe-b) + 12px); z-index: 30; width: 264px; padding: 8px 12px 12px; }
+.music-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 8px; font: 400 18px/1 var(--script); color: var(--sunset-gold); }
+.music-btns { display: flex; gap: 4px; } .music-btns .btn { min-width: 0; padding: 4px 8px; }
+.music-frame { width: 240px; height: 200px; border-radius: 8px; overflow: hidden; background: var(--midnight-deep); }
+.music-frame iframe { display: block; width: 240px; height: 200px; border: 0; }
+.music-empty { font: 700 13px/1.4 var(--body); color: var(--card-white); padding: 16px; margin: 0; }
+.music-album { display: block; width: 100%; margin: 0 0 8px; font-size: 13px; }

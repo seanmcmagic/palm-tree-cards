@@ -319,14 +319,14 @@
       }
     },
     {
-      "id": "summer26",
-      "name": "Summer Edition",
+      "id": "spring",
+      "name": "Spring Edition",
       "concept": true,
-      "source": "Generated Image April 17, 2026 - 1_52PM.png",
+      "source": "OIG2.jpeg",
       "sheet": {
         "files": {
-          "hi": "concepts/summer26/sheet_hi.png",
-          "lo": "concepts/summer26/sheet_lo.png"
+          "hi": "concepts/spring/sheet_hi.png",
+          "lo": "concepts/spring/sheet_lo.png"
         },
         "layouts": {
           "hi": {
@@ -361,8 +361,101 @@
         "front": "sheet:tuck",
         "die": {
           "files": {
-            "hi": "concepts/summer26/tuck_hi.png",
-            "lo": "concepts/summer26/tuck_lo.png"
+            "hi": "concepts/spring/tuck_hi.png",
+            "lo": "concepts/spring/tuck_lo.png"
+          },
+          "panels": {
+            "front": [
+              0.0,
+              0.0,
+              0.390625,
+              0.546875
+            ],
+            "back": [
+              0.390625,
+              0.0,
+              0.78125,
+              0.546875
+            ],
+            "left": [
+              0.78125,
+              0.0,
+              0.859375,
+              0.546875
+            ],
+            "right": [
+              0.859375,
+              0.0,
+              0.9375,
+              0.546875
+            ],
+            "top": [
+              0.0,
+              0.546875,
+              0.390625,
+              0.65625
+            ],
+            "tongue": [
+              0.390625,
+              0.546875,
+              0.78125,
+              0.65625
+            ],
+            "bottom": [
+              0.0,
+              0.65625,
+              0.390625,
+              0.765625
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fall",
+      "name": "Fall Edition",
+      "concept": true,
+      "source": "IMG_20231104_193101_715.jpg",
+      "sheet": {
+        "files": {
+          "hi": "concepts/fall/sheet_hi.png",
+          "lo": "concepts/fall/sheet_lo.png"
+        },
+        "layouts": {
+          "hi": {
+            "cell": [
+              512,
+              1024
+            ],
+            "gutter": 8,
+            "cols": 2,
+            "rows": 1
+          },
+          "lo": {
+            "cell": [
+              256,
+              512
+            ],
+            "gutter": 4,
+            "cols": 2,
+            "rows": 1
+          }
+        },
+        "cells": [
+          "back",
+          "tuck"
+        ]
+      },
+      "back": "sheet:back",
+      "joker": null,
+      "faces": {},
+      "atlas": null,
+      "tuck": {
+        "front": "sheet:tuck",
+        "die": {
+          "files": {
+            "hi": "concepts/fall/tuck_hi.png",
+            "lo": "concepts/fall/tuck_lo.png"
           },
           "panels": {
             "front": [
@@ -456,6 +549,99 @@
           "files": {
             "hi": "concepts/midnight/tuck_hi.png",
             "lo": "concepts/midnight/tuck_lo.png"
+          },
+          "panels": {
+            "front": [
+              0.0,
+              0.0,
+              0.390625,
+              0.546875
+            ],
+            "back": [
+              0.390625,
+              0.0,
+              0.78125,
+              0.546875
+            ],
+            "left": [
+              0.78125,
+              0.0,
+              0.859375,
+              0.546875
+            ],
+            "right": [
+              0.859375,
+              0.0,
+              0.9375,
+              0.546875
+            ],
+            "top": [
+              0.0,
+              0.546875,
+              0.390625,
+              0.65625
+            ],
+            "tongue": [
+              0.390625,
+              0.546875,
+              0.78125,
+              0.65625
+            ],
+            "bottom": [
+              0.0,
+              0.65625,
+              0.390625,
+              0.765625
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "ornate",
+      "name": "White Ornate",
+      "concept": true,
+      "source": "file-mYCeWxmaW7hZnWaeupoorzrV.jpg",
+      "sheet": {
+        "files": {
+          "hi": "concepts/ornate/sheet_hi.png",
+          "lo": "concepts/ornate/sheet_lo.png"
+        },
+        "layouts": {
+          "hi": {
+            "cell": [
+              512,
+              1024
+            ],
+            "gutter": 8,
+            "cols": 2,
+            "rows": 1
+          },
+          "lo": {
+            "cell": [
+              256,
+              512
+            ],
+            "gutter": 4,
+            "cols": 2,
+            "rows": 1
+          }
+        },
+        "cells": [
+          "back",
+          "tuck"
+        ]
+      },
+      "back": "sheet:back",
+      "joker": null,
+      "faces": {},
+      "atlas": null,
+      "tuck": {
+        "front": "sheet:tuck",
+        "die": {
+          "files": {
+            "hi": "concepts/ornate/tuck_hi.png",
+            "lo": "concepts/ornate/tuck_lo.png"
           },
           "panels": {
             "front": [

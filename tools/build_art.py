@@ -265,12 +265,18 @@ def winter():
 # from top-left, read off a grid at the image's own size. Where no back is shown, the back is the front's emblem
 # (rect as 0-1 fractions of the rectified front) on a field colour with a frame, the way many tucks echo the back.
 CONCEPTS = [
-    dict(id='summer26', name='Summer Edition', file='Generated Image April 17, 2026 - 1_52PM.png',
-         front=[(206, 284), (511, 279), (509, 766), (207, 777)], back=[(629, 287), (912, 285), (911, 762), (630, 776)],
-         side=[(169, 272), (204, 284), (205, 778), (170, 770)], board=(232, 226, 210)),
+    dict(id='spring', name='Spring Edition', file='OIG2.jpeg',
+         front=[(262, 172), (765, 172), (765, 875), (262, 875)], emblem=(0.19, 0.22, 0.81, 0.72),
+         field=(24, 60, 58), frame=(230, 205, 170), board=(26, 62, 60)),
+    dict(id='fall', name='Fall Edition', file='IMG_20231104_193101_715.jpg',
+         front=[(240, 176), (742, 176), (742, 796), (240, 796)], emblem=(0.19, 0.18, 0.81, 0.7),
+         field=(246, 241, 233), frame=(140, 40, 40), board=(214, 190, 160)),
     dict(id='midnight', name='Midnight Edition', file='file-Df6JtqD947uXUEE7qCKey7Xu.jpg',
          front=[(292, 198), (730, 198), (730, 815), (292, 815)], emblem=(0.2, 0.21, 0.8, 0.74),
          field=(14, 13, 12), frame=(214, 178, 118), board=(18, 17, 16)),
+    dict(id='ornate', name='White Ornate', file='file-mYCeWxmaW7hZnWaeupoorzrV.jpg',
+         front=[(480, 100), (932, 275), (562, 885), (67, 615)], emblem=(0.1, 0.12, 0.9, 0.84),
+         field=(16, 14, 12), frame=(205, 170, 110), board=(226, 218, 204)),
     dict(id='palmsprings', name='Palm Springs', file='_b540104c-ee3f-4798-8474-38485cce163b.jpeg',
          front=[(300, 212), (862, 110), (862, 902), (300, 988)], side=[(222, 160), (300, 212), (300, 988), (228, 935)],
          emblem=(0.1, 0.07, 0.9, 0.34), twoway=True, field=(248, 240, 228), frame=(232, 93, 138), board=(246, 240, 230)),
@@ -293,28 +299,53 @@ def rectify(img, quad, size):
 
 
 def emblem_back(front, c, size=(500, 700)):
-    """A back made from the front's emblem: field colour, a thin frame, the emblem centred and feathered into the
-    field so no crop edge shows. twoway: the emblem in the top half and again turned 180 in the bottom half."""
-    w, h = size
-    back = Image.new('RGB', size, c['field'])
+    """A card back designed to match a concept tuck (the renders show no backs). Built like a printed back: a white
+    border, the tuck's field colour under a fine lattice, a double frame and corner lozenges in its accent colour,
+    and an oval medallion holding the tuck's emblem, feathered in. twoway: the emblem fills the medallion's top half
+    and again turned 180 in the bottom half. Drawn at 2x and reduced, so lines stay crisp."""
+    k = 2; W, H = size[0] * k, size[1] * k
+    field, acc = c['field'], c['frame']
+    mix = lambda t: tuple(round(f + (a - f) * t) for f, a in zip(field, acc))
+    back = Image.new('RGB', (W, H), (252, 252, 252))
     d = ImageDraw.Draw(back)
-    m = round(w * 0.06)
-    d.rectangle((m, m, w - m, h - m), outline=c['frame'], width=max(2, w // 120))
-    d.rectangle((m * 1.6, m * 1.6, w - m * 1.6, h - m * 1.6), outline=c['frame'], width=max(1, w // 300))
-    fw, fh = front.size
-    x0, y0, x1, y1 = c['emblem']
-    em = front.crop((round(x0 * fw), round(y0 * fh), round(x1 * fw), round(y1 * fh)))
-    box = (round(w * 0.76), round(h * (0.38 if c.get('twoway') else 0.74)))
-    em.thumbnail(box, Image.LANCZOS)
-    mask = Image.new('L', em.size, 0)
-    ImageDraw.Draw(mask).ellipse((em.width * 0.04, em.height * 0.04, em.width * 0.96, em.height * 0.96), fill=255)
-    mask = mask.filter(ImageFilter.GaussianBlur(min(em.size) * 0.06))
+    bw = round(W * 0.055)  # the white border
+    x0, y0, x1, y1 = bw, bw, W - bw, H - bw
+    d.rectangle((x0, y0, x1, y1), fill=field)
+    lat = Image.new('L', (W, H), 0); dl = ImageDraw.Draw(lat); step = W / 13  # diagonal lattice, both ways
+    for i in range(-30, 60):
+        o = i * step
+        dl.line([(o, 0), (o + H, H)], fill=255, width=2 * k); dl.line([(o + H, 0), (o, H)], fill=255, width=2 * k)
+    clip = Image.new('L', (W, H), 0); ImageDraw.Draw(clip).rectangle((x0, y0, x1, y1), fill=255)
+    back.paste(Image.new('RGB', (W, H), mix(0.22)), (0, 0), Image.fromarray((np.asarray(lat, float) * np.asarray(clip, float) / 255).astype(np.uint8)))
+    f1 = round(W * 0.035); f2 = f1 + round(W * 0.022)  # double frame
+    d.rectangle((x0 + f1, y0 + f1, x1 - f1, y1 - f1), outline=acc, width=3 * k)
+    d.rectangle((x0 + f2, y0 + f2, x1 - f2, y1 - f2), outline=acc, width=1 * k)
+    r = W * 0.035  # corner lozenges with a dot, the same at all four corners (a two-way back)
+    for cx, cy in ((x0 + f2 + r * 1.9, y0 + f2 + r * 1.9), (x1 - f2 - r * 1.9, y0 + f2 + r * 1.9),
+                   (x0 + f2 + r * 1.9, y1 - f2 - r * 1.9), (x1 - f2 - r * 1.9, y1 - f2 - r * 1.9)):
+        d.polygon([(cx, cy - r), (cx + r * 0.7, cy), (cx, cy + r), (cx - r * 0.7, cy)], fill=acc)
+        d.ellipse((cx - r * 0.22, cy - r * 0.22, cx + r * 0.22, cy + r * 0.22), fill=field)
+    mw, mh = W * 0.66, H * 0.56  # the medallion
+    mx0, my0 = (W - mw) / 2, (H - mh) / 2
+    d.ellipse((mx0 - 7 * k, my0 - 7 * k, mx0 + mw + 7 * k, my0 + mh + 7 * k), fill=acc)
+    d.ellipse((mx0 - 3 * k, my0 - 3 * k, mx0 + mw + 3 * k, my0 + mh + 3 * k), fill=field)
+    d.ellipse((mx0, my0, mx0 + mw, my0 + mh), fill=field, outline=acc, width=k)
+    fw, fh = front.size; ex0, ey0, ex1, ey1 = c['emblem']
+    em = front.crop((round(ex0 * fw), round(ey0 * fh), round(ex1 * fw), round(ey1 * fh)))
+    def feathered(img, box):
+        sc = min(box[0] / img.width, box[1] / img.height)  # fit the box, enlarging as well as shrinking
+        img = img.resize((round(img.width * sc), round(img.height * sc)), Image.LANCZOS)
+        m = Image.new('L', img.size, 0)
+        ImageDraw.Draw(m).ellipse((img.width * 0.05, img.height * 0.05, img.width * 0.95, img.height * 0.95), fill=255)
+        return img, m.filter(ImageFilter.GaussianBlur(min(img.size) * 0.07))
     if c.get('twoway'):
-        back.paste(em, ((w - em.width) // 2, h // 2 - em.height - round(h * 0.02)), mask)
-        back.paste(em.rotate(180), ((w - em.width) // 2, h // 2 + round(h * 0.02)), mask.rotate(180))
+        e, m = feathered(em, (round(mw * 0.86), round(mh * 0.46)))
+        back.paste(e, (round((W - e.width) / 2), round(H / 2 - e.height - k * 4)), m)
+        back.paste(e.rotate(180), (round((W - e.width) / 2), round(H / 2 + k * 4)), m.rotate(180))
     else:
-        back.paste(em, ((w - em.width) // 2, (h - em.height) // 2), mask)
-    return back
+        e, m = feathered(em, (round(mw * 0.86), round(mh * 0.9)))
+        back.paste(e, (round((W - e.width) / 2), round((H - e.height) / 2)), m)
+    return back.resize(size, Image.LANCZOS)
 
 
 def concept_tuck(front, back, side, board, out_dir):
@@ -334,10 +365,21 @@ def concept_tuck(front, back, side, board, out_dir):
     return {'files': files, 'panels': {k: [r[0] / W, r[1] / W, r[2] / W, r[3] / W] for k, r in layout.items()}}
 
 
+def open_photo(path):
+    """Open an image; a few phone photos are HEIC saved as .jpg, which Pillow can't read: decode those with ffmpeg."""
+    try:
+        return Image.open(path).convert('RGB')
+    except Exception:
+        import subprocess, tempfile
+        out = Path(tempfile.gettempdir()) / (path.stem + '_heic.png')
+        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(path), '-frames:v', '1', str(out)], check=True)
+        return Image.open(out).convert('RGB')
+
+
 def concepts():
     out = []
     for c in CONCEPTS:
-        img = Image.open(SRC / 'variants' / c['file']).convert('RGB')
+        img = open_photo(SRC / 'variants' / c['file'])
         front = rectify(img, c['front'], (500, 700))
         back = rectify(img, c['back'], (500, 700)) if 'back' in c else emblem_back(front, c)
         side = rectify(img, c['side'], (80, 700)) if 'side' in c else None
