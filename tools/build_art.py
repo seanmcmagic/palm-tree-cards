@@ -184,6 +184,17 @@ def flat_cell(img, cw, ch, g):
     return Image.fromarray(np.dstack([a, np.full(a.shape[:2], 255, np.uint8)]))
 
 
+def white_border(card, frac):
+    """Re-seat a back's art inside a wider white border (frac of the card's width on every side). The print file's
+    art sits about 2.2% in; on the printed Original (from my album) the border measures about 4.5%."""
+    a = np.asarray(card.convert('RGB')).astype(int); ys, xs = np.where(a.min(axis=2) < 235)
+    art = card.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
+    w, h = card.size; b = round(w * frac)
+    out = Image.new('RGB', card.size, (252, 252, 252))
+    out.paste(art.resize((w - 2 * b, h - 2 * b), Image.LANCZOS), (b, b))
+    return out
+
+
 def original():
     doc = pymupdf.open(PRINT)
     back = pdf_image(doc, 0, lambda x, r: r.y0 < 100 and r.x0 > 300)     # top-right on p1
@@ -191,7 +202,7 @@ def original():
     die = pdf_image(doc, 0, lambda x, r: r.x0 < 100 and r.y0 < 100)     # the tuck dieline art
     ace = pdf_image(doc, 1, lambda x, r: r.x0 < 100 and r.y0 < 100)     # p2, first card
     panels = TUCK_PANELS['original']
-    cells = {'back': trim(back), 'AS': trim(ace), 'JK': trim(joker), 'tuck': die.crop(panels['front'])}
+    cells = {'back': white_border(trim(back), 0.045), 'AS': trim(ace), 'JK': trim(joker), 'tuck': die.crop(panels['front'])}
     return {
         'id': 'original', 'name': 'Original',
         'sheet': card_sheet('original', cells, ((512, 1024), 8, 4)),
