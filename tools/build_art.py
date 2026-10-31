@@ -407,7 +407,8 @@ TEXT_FIXES = {
                    ('swap', (270, 925, 480, 957), (353, 369), (185, 872, 580, 920), (485, 507))],  # WINTEB -> WINTER
     'aceofspades': [('erase', (105, 235, 315, 365)), ('erase', (440, 235, 645, 365)),  # "ALNE CARD", "CARD TADD"
                     ('erase', (150, 815, 575, 876)), ('erase', (305, 922, 450, 955)),  # nonsense lines, "THE BADS"
-                    ('erase', (140, 728, 255, 756)), ('erase', (495, 728, 610, 756))],
+                    ('erase', (140, 728, 255, 756)), ('erase', (495, 728, 610, 756)),
+                    ('erase', (588, 778, 678, 958))],  # the stray heart and "V" in the corner
     'spring': [('erase', (115, 55, 245, 90)), ('erase', (505, 55, 640, 90)),  # "AC LACE", "ATCC OOTI"
                ('erase', (140, 740, 290, 820)), ('erase', (460, 740, 610, 820))],  # "SPPRING", "EDITION"
     'midnight': [('erase', (188, 740, 225, 766)), ('erase', (530, 740, 566, 766))],  # "Z3", "7?R"
