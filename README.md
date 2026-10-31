@@ -3,6 +3,8 @@
 A small three.js card table using my own deck, Palm Tree Playing Cards (Kickstarter 2020, USPCC). It plays
 **Klondike Solitaire** and **Blackjack** (one player against the dealer), picked from the title menu.
 
+**Play it:** https://seanmcmagic.github.io/palm-tree-cards/ (GitHub Pages, served from `master`; a push updates it in about a minute).
+
 ## Run it
 
 ```
