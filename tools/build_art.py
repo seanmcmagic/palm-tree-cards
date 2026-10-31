@@ -393,11 +393,118 @@ def open_photo(path):
         return Image.open(out).convert('RGB')
 
 
+# The concept renders are AI images with garbled lettering. Fixes, in pixels of the 750 x 1050 rectified front:
+#   ('erase', box)                          remove every letter shape that lies wholly inside box, fill from around it
+#   ('wipe', box)                           fill the whole box (for a letter fused to artwork outside the box)
+#   ('respace', box, keep)                  keep only the ink in these x ranges (touching letters can be split this
+#                                           way), drop the rest, close the gaps and recentre the word
+#   ('swap', box, xr, src_box, src_xr)      replace the letter at x range xr with the one at src_xr in src_box, scaled
+# Only shapes wholly inside a box are touched, so artwork that crosses the box edge survives.
+TEXT_FIXES = {
+    'midnightwhite': [('erase', (148, 186, 562, 234)), ('wipe', (160, 207, 205, 236)),                     # "PLAYING CADES"
+                      ('erase', (178, 238, 298, 278)), ('erase', (462, 238, 582, 278))],  # "24 -", "315 ="
+    'navywinter': [('respace', (395, 125, 610, 232), [(397, 435), (469, 513), (521, 549), (564, 596)]),  # TRREE -> TREE
+                   ('swap', (270, 925, 480, 957), (353, 369), (185, 872, 580, 920), (485, 507))],  # WINTEB -> WINTER
+    'aceofspades': [('erase', (105, 235, 315, 365)), ('erase', (440, 235, 645, 365)),  # "ALNE CARD", "CARD TADD"
+                    ('erase', (150, 815, 575, 876)), ('erase', (305, 922, 450, 955)),  # nonsense lines, "THE BADS"
+                    ('erase', (140, 728, 255, 756)), ('erase', (495, 728, 610, 756))],
+    'spring': [('erase', (115, 55, 245, 90)), ('erase', (505, 55, 640, 90)),  # "AC LACE", "ATCC OOTI"
+               ('erase', (140, 740, 290, 820)), ('erase', (460, 740, 610, 820))],  # "SPPRING", "EDITION"
+    'midnight': [('erase', (188, 740, 225, 766)), ('erase', (530, 740, 566, 766))],  # "Z3", "7?R"
+}
+
+
+def _letters(a, box, thr=70):
+    """Letter shapes wholly inside box: (x0, x1, mask) per letter, left to right. Ink is anything far from the
+    box's border colour; shapes touching the box edge belong to the artwork and are left alone."""
+    import scipy.ndimage as ndi
+    x0, y0, x1, y1 = box
+    region = a[y0:y1, x0:x1].astype(float)
+    border = np.concatenate([region[0], region[-1], region[:, 0], region[:, -1]])
+    ink = np.linalg.norm(region - np.median(border, axis=0), axis=2) > thr
+    lab, n = ndi.label(ink)
+    shapes = []
+    for i, sl in enumerate(ndi.find_objects(lab), 1):
+        if sl[0].start == 0 or sl[1].start == 0 or sl[0].stop == ink.shape[0] or sl[1].stop == ink.shape[1]:
+            continue
+        m = np.zeros(a.shape[:2], bool); m[y0:y1, x0:x1] = lab == i
+        shapes.append((sl[1].start + x0, sl[1].stop + x0, m))
+    shapes.sort(key=lambda t: t[0])
+    letters = []  # shapes overlapping in x are one letter (dots, accents, broken strokes)
+    for sx0, sx1, m in shapes:
+        if letters and sx0 <= letters[-1][1]:
+            px0, px1, pm = letters[-1]; letters[-1] = (px0, max(px1, sx1), pm | m)
+        else:
+            letters.append((sx0, sx1, m))
+    return letters
+
+
+def _erase(a, mask, grow=5):
+    """Fill the mask (grown a little) with the colour and grain of the ring just around it, feathered at the edge.
+    Inpainting smeared nearby shading into soft grey blobs on the plain paper tucks; this keeps the paper flat."""
+    import cv2
+    m = cv2.dilate(mask.astype(np.uint8), np.ones((grow, grow), np.uint8)) > 0
+    ring = cv2.dilate(m.astype(np.uint8), np.ones((15, 15), np.uint8)).astype(bool) & ~m
+    if not ring.any():
+        return a
+    px = a[ring].astype(float); med, std = np.median(px, axis=0), px.std(axis=0).clip(0, 12)
+    rng = np.random.default_rng(0)
+    fill = (med + rng.normal(0, 1, a.shape[:2] + (1,)) * std).clip(0, 255)
+    alpha = cv2.GaussianBlur(m.astype(np.float32), (0, 0), 1.2)[..., None]
+    return (a * (1 - alpha) + fill * alpha).astype(np.uint8)
+
+
+def _paste(a, src, mask, dx, dy):
+    ys, xs = np.nonzero(mask)
+    a[ys + dy, xs + dx] = src[ys, xs]
+
+
+def fix_text(img, fixes):
+    a = np.asarray(img.convert('RGB')).copy()
+    for f in fixes:
+        if f[0] == 'erase':
+            for _, _, m in _letters(a, f[1], thr=50):  # lower threshold: catch the letters' soft edges too
+                a = _erase(a, m, grow=9)
+        elif f[0] == 'wipe':
+            x0, y0, x1, y1 = f[1]; m = np.zeros(a.shape[:2], bool); m[y0:y1, x0:x1] = True
+            a = _erase(a, m, grow=1)
+        elif f[0] == 'respace':
+            letters = _letters(a, f[1]); src = a.copy()
+            ink = np.zeros(a.shape[:2], bool)
+            for _, _, m in letters: ink |= m
+            cols = np.arange(a.shape[1])
+            keep = [(x0, x1, ink & (cols >= x0)[None, :] & (cols < x1)[None, :]) for x0, x1 in f[2]]
+            gap = int(np.median([keep[i + 1][0] - keep[i][1] for i in range(len(keep) - 1)])) if len(keep) > 1 else 0
+            gap = min(gap, 14)
+            width = sum(x1 - x0 for x0, x1, _ in keep) + gap * (len(keep) - 1)
+            x = (letters[0][0] + letters[-1][1]) // 2 - width // 2  # recentre on the old word
+            a = _erase(a, ink)
+            for x0, x1, m in keep:
+                _paste(a, src, m, x - x0, 0); x += (x1 - x0) + gap
+        elif f[0] == 'swap':
+            _, box, xr, sbox, sxr = f
+            pick = lambda letters, r: [l for l in letters if l[0] < r[1] and l[1] > r[0]]
+            tl, sl = pick(_letters(a, box), xr), pick(_letters(a, sbox), sxr)
+            tm = np.any([l[2] for l in tl], axis=0); sm = np.any([l[2] for l in sl], axis=0)
+            tx0 = min(l[0] for l in tl); sx0, sx1 = min(l[0] for l in sl), max(l[1] for l in sl)
+            ty, sy = np.nonzero(tm)[0], np.nonzero(sm)[0]
+            th, sh = ty.max() - ty.min() + 1, sy.max() - sy.min() + 1
+            glyph = Image.fromarray(a[sy.min():sy.max() + 1, sx0:sx1])
+            gm = Image.fromarray((sm[sy.min():sy.max() + 1, sx0:sx1] * 255).astype(np.uint8))
+            size = (max(1, round((sx1 - sx0) * th / sh)), th)
+            glyph = np.asarray(glyph.resize(size, Image.LANCZOS)); gm = np.asarray(gm.resize(size, Image.LANCZOS)) > 110
+            tint = a[tm].reshape(-1, 3).mean(0) / glyph[gm].reshape(-1, 3).mean(0).clip(1)  # take on the old letter's colour
+            glyph = (glyph * tint).clip(0, 255).astype(np.uint8)
+            a = _erase(a, tm)
+            ys, xs = np.nonzero(gm); a[ys + ty.min(), xs + tx0] = glyph[ys, xs]
+    return Image.fromarray(a)
+
+
 def concepts():
     out = []
     for c in CONCEPTS:
         img = open_photo(SRC / 'variants' / c['file'])
-        front = rectify(img, c['front'], (500, 700))
+        front = fix_text(rectify(img, c['front'], (750, 1050)), TEXT_FIXES.get(c['id'], []))
         back = rectify(img, c['back'], (500, 700)) if 'back' in c else emblem_back(front, c)
         side = rectify(img, c['side'], (80, 700)) if 'side' in c else None
         d = ROOT / 'art' / 'concepts' / c['id']

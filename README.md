@@ -86,7 +86,7 @@ hinges at the back wall so the logo wall faces you; on the dieline it hangs off 
 exists for these, so they aren't playable: only Original and Winter are. Eight concept tucks stand in the brick's
 spare slots, front row first (two fit in the half brick, all eight in the full brick): Spring Edition, Fall Edition,
 Midnight Edition, White Ornate, Navy Winter, Summer Edition, Midnight White and Ace of Spades. For each, the build script perspective-warps the tuck front out of one
-render (`CONCEPTS` in `tools/build_art.py` lists the corners). Tapping one shows the tuck large with **I'd buy this**;
+render (`CONCEPTS` in `tools/build_art.py` lists the corners). The renders' garbled lettering is fixed at build time (`TEXT_FIXES`): stray words are removed and filled with the surrounding paper, and misspelled words are rebuilt from letters on the same tuck (Navy Winter's TRREE and WINTEB). Tapping one shows the tuck large with **I'd buy this**;
 each tap adds a vote, kept in `localStorage` (`votes` in `palmtree-cards-v1`) on this device only, a demand test for
 which deck to print next. (The build still designs a matching back for each, in case one becomes playable.)
 
