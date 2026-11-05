@@ -198,6 +198,31 @@ def white_border(card, frac):
     return out
 
 
+# Daniel Schneider's redrawn standard faces (print file p2-p5: spades, diamonds, clubs, hearts; A to K in reading
+# order). NOT public until Daniel agrees in writing: they go to art/schneider/ (git-ignored) with their own
+# faces.json, and the game reads them only with ?faces=schneider. The committed manifest never names them.
+SCHNEIDER_SUITS = 'SDCH'
+
+
+def schneider(orig):
+    doc = pymupdf.open(PRINT)
+    out = ROOT / 'art' / 'schneider'
+    cells = {}
+    for k in ('back', 'AS', 'JK', 'tuck'):  # my own cells first, copied from the Original sheet build
+        cells[k] = orig[k]
+    for pg, suit in enumerate(SCHNEIDER_SUITS, 1):
+        page = doc[pg]
+        found = sorted((round(r.y0), round(r.x0), info[0]) for info in page.get_images(full=True) for r in page.get_image_rects(info[0]))
+        for (y, x, xref), rank in zip(found, RANKS):
+            if rank + suit == 'AS':
+                continue  # my custom Ace of Spades, not Daniel's
+            cells[rank + suit] = trim(pdf_image(doc, pg, lambda X, R, xref=xref: X == xref))
+    sheet = card_sheet('schneider', cells, ((256, 512), 6, 16), lo=((256, 256), 4, 8))
+    (out / 'faces.json').write_text(json.dumps({'_comment': "Daniel Schneider's faces; local only until he agrees.",
+                                                 'sheet': sheet, 'faces': 'sheet'}, indent=2) + '\n', encoding='utf-8')
+    print('art/schneider/faces.json')
+
+
 def original():
     doc = pymupdf.open(PRINT)
     back = pdf_image(doc, 0, lambda x, r: r.y0 < 100 and r.x0 > 300)     # top-right on p1
@@ -206,6 +231,7 @@ def original():
     ace = pdf_image(doc, 1, lambda x, r: r.x0 < 100 and r.y0 < 100)     # p2, first card
     panels = TUCK_PANELS['original']
     cells = {'back': white_border(trim(back), 0.045), 'AS': trim(ace), 'JK': trim(joker), 'tuck': die.crop(panels['front'])}
+    schneider(cells)  # local only, never in the manifest
     return {
         'id': 'original', 'name': 'Original',
         'sheet': card_sheet('original', cells, ((512, 1024), 8, 4)),
