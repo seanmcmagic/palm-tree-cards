@@ -317,7 +317,7 @@ let shellPaused = false;
 const canPause = () => !!current && $('#modal').hidden;
 const clock = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 const shell = GameShell.mount({
-  id: 'palmtree', title: 'Palm Tree', titleScreen: false, accent: '#f5c364',
+  id: 'palmtree', title: 'Palm Tree', titleScreen: false, accent: '#f5c364', orientation: null,   // phones play it upright too: fullscreen without a landscape lock
   theme: { '--gs-font': '"Nunito Sans", system-ui, sans-serif', '--gs-display': '"Pacifico", "Brush Script MT", cursive', '--gs-title-track': '1px',
     '--gs-card-a': 'rgba(0,42,79,.95)', '--gs-card-b': 'rgba(0,27,51,.97)', '--gs-seg-bg': '#001b33', '--gs-seg-line': '#1d4166', '--gs-kbd-bg': '#00213f', '--gs-kbd-line': '#1d4166' },   // the game's midnight panel
   save: { key: 'palmtree.shell.save', version: 1 },   // stats and bankroll stay in the game's own store (palmtree-cards-v1)

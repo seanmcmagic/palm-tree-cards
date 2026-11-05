@@ -12,7 +12,7 @@
    CSS:        the sibling file with .css for .js (gamekit-shell.css), linked automatically.
    API:        README.md next to this file. Vendored copies: run `python sync.py` after editing, then commit each repo.
 ══════════════════════════════════════════════════════════════════════════════════════════════════ */
-const VERSION = '2026-11-04';
+const VERSION = '2026-11-04b';   // b: fullscreen on phones and tablets (Start in fullscreen, landscape lock)
 const root = typeof globalThis !== 'undefined' ? globalThis : window;
 
 // ── css: link the sibling .css; hide shell roots until it lands (no flash of unstyled menu) ─────────
@@ -82,6 +82,13 @@ function makeSave(cfg) {
 
 // ── shell prefs (audio / gameplay rows the shell provides by default) ───────────────────────────────
 const PREF_DEF = { master: 1, music: 0.7, sfx: 0.9, sens: 1, invertY: false, fov: 0, rumble: true, showFps: false };
+// Fullscreen. Phones and tablets are where it matters most (Sean, 2026-11-04: "I just like when the game goes into full screen"),
+// so it is offered on touch too and, by default there, entered on the first Play / Continue tap (requestFullscreen needs a
+// user gesture). Inside the APK wrapper (Proving/android WebView, already immersive) it is skipped entirely.
+const COARSE = () => typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+const IN_APP = () => typeof navigator !== 'undefined' && (/; wv\)|TarnhollowApp\//.test(navigator.userAgent || '') || !!root.TarnNative);
+const FS_OK = () => typeof document !== 'undefined' && !!(document.fullscreenEnabled || document.webkitFullscreenEnabled) && !IN_APP();
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
 function loadShellPrefs(ns, defs) {
   let p = null; try { p = JSON.parse(localStorage.getItem(ns + '.shell.v1') || 'null'); } catch (e) { p = null; }
   return Object.assign({}, PREF_DEF, defs || {}, p && typeof p === 'object' ? p : {});
@@ -112,7 +119,7 @@ function mount(cfg) {
   const shell = {
     version: VERSION, cfg, ns, text,
     save: makeSave(cfg.save),
-    prefs: loadShellPrefs(ns, cfg.prefs),
+    prefs: loadShellPrefs(ns, Object.assign({ fullscreen: COARSE() && !IN_APP() }, cfg.prefs)),
     input: { mode: 'kbd', padId: '', ps: false },
     closedAt: 0,
   };
@@ -469,6 +476,37 @@ function mount(cfg) {
   };
   shell.settings = settings;
 
+  // ── fullscreen: shell.fullscreen.enter() / exit() / toggle() / auto(); cfg.orientation 'landscape' (default) | 'portrait' | null ──
+  const fullscreen = {
+    supported: FS_OK, inApp: IN_APP, active: () => !!fsEl(),
+    /** call inside a user gesture (a click / tap handler), before any await */
+    enter() {
+      if (!FS_OK() || fsEl()) return Promise.resolve(false);
+      const el = document.documentElement, req = el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : el.webkitRequestFullscreen ? el.webkitRequestFullscreen() : null;
+      return Promise.resolve(req).then(() => {
+        const o = cfg.orientation === undefined ? 'landscape' : cfg.orientation;
+        if (o && COARSE() && root.screen && screen.orientation && screen.orientation.lock) return screen.orientation.lock(o).catch(() => {});   // unsupported or refused: ignore
+      }).then(() => true, () => false);
+    },
+    exit() { if (!fsEl()) return Promise.resolve(); try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) { /* */ } return (document.exitFullscreen ? document.exitFullscreen() : Promise.resolve(document.webkitExitFullscreen && document.webkitExitFullscreen())).catch(() => {}); },
+    toggle() { return fsEl() ? fullscreen.exit() : fullscreen.enter(); },
+    /** the "Start in fullscreen" preference: enter if it is on (Play / Continue call this) */
+    auto() { if (cfg.fullscreen !== false && shell.prefs.fullscreen && FS_OK() && !fsEl()) return fullscreen.enter(); return Promise.resolve(false); },   // cfg.fullscreen:false = the game owns it (Tarnhollow)
+  };
+  shell.fullscreen = fullscreen;
+  addEventListener('fullscreenchange', () => { if (title.visible && title.visible()) title.render(); });
+  // a game without the shell's title card (Palm Tree, BREACH): the first touch is the gesture
+  if (cfg.title === false || cfg.titleScreen === false) {
+    const first = (e) => { if (e.pointerType && e.pointerType !== 'touch') return; removeEventListener('pointerup', first, true); fullscreen.auto(); };
+    addEventListener('pointerup', first, true);
+  }
+  // Settings > Graphics always ends with the fullscreen row (after the game's own graphics rows, before its extenders)
+  settings.extend('graphics', (u, body) => {
+    if (!FS_OK() || cfg.fullscreen === false) return;
+    u.choice(body, { label: 'Start in fullscreen', hint: COARSE() ? 'on the first Play or Continue' : 'on Play or Continue', opts: ONOFF, get: () => !!shell.prefs.fullscreen,
+      set: (v) => { shell.setPref('fullscreen', v); if (v) fullscreen.enter(); else fullscreen.exit(); } });
+  });
+
   const pct = (v) => Math.round(v * 100) + '%';
   const ONOFF = [[false, 'Off'], [true, 'On']];
   shell.ONOFF = ONOFF; shell.pct = pct;
@@ -528,8 +566,8 @@ function mount(cfg) {
     new:        { domId: 'gs-new', label: 'New game', act: () => title.doNew() },
     settings:   { domId: 'gs-settings', label: 'Settings', act: () => settings.open(null, { standalone: true }) },
     fullscreen: { domId: 'gs-fs', label: () => (document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen'),
-                  show: () => !!document.fullscreenEnabled && !matchMedia('(pointer: coarse)').matches,
-                  act: () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()).catch(() => {}).then(() => title.render()) },
+                  show: () => FS_OK(),   // touch too: phones are where fullscreen matters most
+                  act: () => fullscreen.toggle().then(() => title.render()) },
     credits:    { domId: 'gs-credits', label: 'Credits', show: () => !!cfg.onCredits, act: () => call(cfg.onCredits) },
     quit:       { domId: 'gs-quit', label: 'Quit', show: () => !!cfg.onQuit, act: () => call(cfg.onQuit) },
   };
@@ -577,11 +615,13 @@ function mount(cfg) {
     show() { tEl.style.display = ''; title.render(); syncOwner(); },
     hide() { tEl.style.display = 'none'; syncOwner(); },
     async doContinue() {
+      fullscreen.auto();                               // still inside the tap: requestFullscreen needs the gesture
       if (!shell.save.has()) return;
       title.busy = true;
       try { await call(cfg.onContinue, shell.save.read()); } finally { title.busy = false; }
     },
     doNew() {
+      fullscreen.auto();
       const go = (replacing) => call(cfg.onNewGame, { replacing });
       if (!shell.save.has() || cfg.askBeforeNew === false) return go(false);
       confirm({ kind: 'new', id: cfg.newGameAskId, title: text.newGameAsk, text: esc(text.newGameSub), focus: 0,
