@@ -176,7 +176,7 @@ export class TitleBox {
     }
     for (let c = 0; c < this.cols; c++) {
       const g = this.game(c), p = this.slot(0, c);
-      this.app.label('tcol' + c, show && g ? g.name : null, new THREE.Vector3(p.x, 0, this.D / 2 + 0.3 + (c % 2) * 0.32), 'title-label');
+      this.app.label('tcol' + c, show && g ? g.name : null, new THREE.Vector3(p.x, 0, this.D / 2 + 0.3), 'title-label', 'tcol');
     }
     for (let r = 0; r < this.rows; r++) {
       const p = this.slot(r, 0);

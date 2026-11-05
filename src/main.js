@@ -104,11 +104,12 @@ const app = {
     sun.target.position.copy(c).setY(0); sun.position.set(c.x - 5, 14, c.z + 7);
     needRender = true; return hi; // the camera distance: smaller means the box is bigger on screen
   },
-  label(id, text, pos, cls = '') {
+  // group: labels in one group never overlap on screen; a label that would collide drops below the one before it
+  label(id, text, pos, cls = '', group = null) {
     let l = labels.get(id);
     if (!l) { const el = document.createElement('div'); el.className = 'hand-label'; $('#labels').append(el); l = { el, pos: new THREE.Vector3() }; labels.set(id, l); }
     if (text == null) { l.el.hidden = true; return; }
-    l.el.hidden = false; l.el.textContent = text; l.el.className = 'hand-label ' + cls; l.pos.copy(pos); needRender = true;
+    l.el.hidden = false; l.el.textContent = text; l.el.className = 'hand-label ' + cls; l.pos.copy(pos); l.group = group; needRender = true;
   },
   clearLabels() { for (const l of labels.values()) l.el.hidden = true; },
   toast(msg, ms = 1600) {
@@ -312,6 +313,24 @@ function resize() {
 }
 addEventListener('resize', resize);
 let last = performance.now();
+function placeLabels() {
+  const groups = new Map();
+  for (const l of labels.values()) {
+    if (l.el.hidden) continue;
+    const p = app.project(l.pos); l.x = p.x; l.y = p.y;
+    if (l.group) { if (!groups.has(l.group)) groups.set(l.group, []); groups.get(l.group).push(l); }
+  }
+  for (const list of groups.values()) { // left to right; each label clears every earlier one it overlaps
+    list.sort((a, b) => a.x - b.x);
+    const placed = [];
+    for (const l of list) {
+      const w = l.el.offsetWidth, h = l.el.offsetHeight;
+      for (const o of placed) if (Math.abs(l.x - o.x) < (w + o.w) / 2 + 6 && Math.abs(l.y - o.y) < (h + o.h) / 2) l.y = o.y + (h + o.h) / 2;
+      l.w = w; l.h = h; placed.push(l);
+    }
+  }
+  for (const l of labels.values()) if (!l.el.hidden) { l.el.style.left = l.x + 'px'; l.el.style.top = l.y + 'px'; }
+}
 function frame(now) { requestAnimationFrame(frame); step(now); }
 function step(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
@@ -319,7 +338,7 @@ function step(now) {
   const moving = tick(now), upd = current?.update?.(dt);
   if (moving || upd || needRender) {
     renderer.render(scene, camera); needRender = false;
-    for (const l of labels.values()) if (!l.el.hidden) { const p = app.project(l.pos); l.el.style.left = p.x + 'px'; l.el.style.top = p.y + 'px'; }
+    placeLabels();
   }
 }
 
