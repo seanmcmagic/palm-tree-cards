@@ -86,7 +86,9 @@ const PREF_DEF = { master: 1, music: 0.7, sfx: 0.9, sens: 1, invertY: false, fov
 // so it is offered on touch too and, by default there, entered on the first Play / Continue tap (requestFullscreen needs a
 // user gesture). Inside the APK wrapper (Proving/android WebView, already immersive) it is skipped entirely.
 const COARSE = () => typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-const IN_APP = () => typeof navigator !== 'undefined' && (/; wv\)|TarnhollowApp\//.test(navigator.userAgent || '') || !!root.TarnNative);
+// every APK (showcase games, Tarnhollow, Brinecrown, Deckline) serves from appassets.androidplatform.net and swallows requestFullscreen
+const IN_APP = () => (typeof location !== 'undefined' && location.hostname === 'appassets.androidplatform.net') ||
+  (typeof navigator !== 'undefined' && (/; wv\)|TarnhollowApp\//.test(navigator.userAgent || '') || !!root.TarnNative));
 const FS_OK = () => typeof document !== 'undefined' && !!(document.fullscreenEnabled || document.webkitFullscreenEnabled) && !IN_APP();
 const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
 function loadShellPrefs(ns, defs) {
