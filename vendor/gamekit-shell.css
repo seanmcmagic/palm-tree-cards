@@ -1,0 +1,169 @@
+/* GameKit shell/shell.css — the product shell's look (title, pause, settings, confirm, loading, fps).
+   The pause card is Tarnhollow's 395 card (2026-10), lifted whole. Every colour and font is a variable, so a game
+   re-themes it with `theme: { '--gs-accent': '#...' }` in GameShell.mount() instead of copying rules.
+   Scoped: everything lives under .gs-title / .gs-ov / .gs-load / .gs-fps, so a game's own .row / .btn are untouched. */
+:root{
+  --gs-accent:#d8b46a; --gs-accent-hi:#ffd37a; --gs-accent-lo:#9c7a3c; --gs-ink:#e8dcc0; --gs-ink2:#d8c9a2; --gs-dim:#8a7f68; --gs-dim2:#6f6655;
+  --gs-item:#bfb293; --gs-danger:#f0a088; --gs-danger-dot:#e07a68;
+  --gs-card-a:rgba(28,22,15,.93); --gs-card-b:rgba(13,10,7,.95); --gs-seg-bg:#15110b; --gs-seg-line:#3a3022; --gs-kbd-bg:#1a150e; --gs-kbd-line:#4a3e29;
+  --gs-font:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --gs-display:'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;
+  --gs-z:46;
+  /* title */
+  --gs-title-ink:#e8dcc0; --gs-title-font:var(--gs-display); --gs-title-size:46px; --gs-title-track:16px;
+  --gs-btn-bg:rgba(14,10,6,.55); --gs-btn-line:#5a4a2c; --gs-btn-ink:#e8dcc0; --gs-btn-hover:rgba(40,30,16,.85); --gs-btn-hover-line:var(--gs-accent);
+  --gs-btn-font:var(--gs-font); --gs-btn-w:260px; --gs-title-bg:#06080c; --gs-load-bg:var(--gs-title-bg);
+}
+.gs-title{visibility:visible}
+.gs-ov,.gs-load{visibility:visible}
+
+/* ── title ─────────────────────────────────────────────────────────────────────────────────────── */
+.gs-title{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--gs-title-bg);overflow:hidden;color:var(--gs-title-ink);font:13px/1.55 var(--gs-btn-font);
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);box-sizing:border-box;
+  -webkit-user-select:none;user-select:none;touch-action:manipulation}
+.gs-title .gs-art{position:absolute;inset:0;z-index:-2;background:var(--gs-title-bg) center/cover no-repeat;transform-origin:50% 60%;animation:gsDrift 42s ease-in-out infinite alternate}
+.gs-title .gs-scrim{position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(70% 60% at 50% 46%,rgba(4,6,10,.55) 0%,rgba(4,6,10,0) 75%),linear-gradient(180deg,rgba(4,6,10,.45) 0%,rgba(4,6,10,.12) 40%,rgba(4,6,10,.7) 100%)}
+@keyframes gsDrift{from{transform:scale(1)}to{transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){.gs-title .gs-art{animation:none}}
+.gs-title .gs-logo{max-width:min(420px,70vw);max-height:30vh;margin-bottom:10px;filter:drop-shadow(0 4px 18px rgba(0,0,0,.6))}
+.gs-title h1{font:400 var(--gs-title-size)/1.1 var(--gs-title-font);letter-spacing:var(--gs-title-track);margin:0 0 6px;text-align:center;text-shadow:0 2px 14px rgba(0,0,0,.75);padding-left:var(--gs-title-track)}
+.gs-title .gs-tag{opacity:.8;margin:0 0 42px;letter-spacing:3px;font-size:11px;text-shadow:0 2px 14px rgba(0,0,0,.75);text-align:center;max-width:90vw}
+.gs-title .gs-blurb{font-style:italic;opacity:.82;line-height:1.6;max-width:min(560px,86vw);margin:-30px auto 26px;text-align:center;letter-spacing:.02em;text-shadow:0 2px 10px rgba(0,0,0,.8)}
+.gs-title .gs-items{display:flex;flex-direction:column;align-items:center}
+.gs-title button{display:block;width:var(--gs-btn-w);max-width:80vw;margin:5px 0;padding:11px;font:inherit;letter-spacing:3px;text-transform:uppercase;
+  background:var(--gs-btn-bg);color:var(--gs-btn-ink);border:1px solid var(--gs-btn-line);border-radius:3px;cursor:pointer}
+.gs-title button:hover:not(:disabled),.gs-title button.f:not(:disabled){background:var(--gs-btn-hover);border-color:var(--gs-btn-hover-line);color:#fff}
+.gs-title button.f:not(:disabled){box-shadow:0 0 0 1px var(--gs-btn-hover-line),0 0 16px rgba(255,211,122,.25)}
+.gs-title button:disabled{opacity:.25;cursor:default}
+.gs-title .gs-foot{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:16px;font-size:10px;letter-spacing:.1em;color:var(--gs-dim2)}
+.gs-title .gs-ver{position:absolute;right:calc(12px + env(safe-area-inset-right));bottom:calc(10px + env(safe-area-inset-bottom));font-size:10px;opacity:.45}
+@media (pointer:coarse){.gs-title button{min-height:44px}}
+/* short screens (a phone in landscape is ~360 px): smaller heading, the blurb goes, and the card scrolls rather than clip */
+@media (max-height:520px){.gs-title{justify-content:safe center;overflow-y:auto}.gs-title h1{--gs-title-size:34px !important;font-size:34px}.gs-title .gs-tag{margin-bottom:10px}
+  .gs-title .gs-blurb{display:none}.gs-title button{margin:3px 0;padding:7px;min-height:36px}}
+
+/* ── overlay: pause / settings / confirm (Tarnhollow 395's card) ────────────────────────────────── */
+.gs-ov{position:fixed;inset:0;z-index:var(--gs-z);display:none;color:var(--gs-ink);font:13px/1.55 var(--gs-font);-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.gs-ov.on{display:block}
+.gs-ov .bd{position:absolute;inset:0;-webkit-backdrop-filter:blur(7px) saturate(.7) brightness(.6);backdrop-filter:blur(7px) saturate(.7) brightness(.6);
+  background:radial-gradient(120% 95% at 50% 42%,rgba(20,14,8,.10) 0%,rgba(8,6,4,.62) 62%,rgba(3,2,1,.9) 100%);animation:gsfade .22s ease-out}
+.gs-ov.solo .bd{background:radial-gradient(120% 95% at 50% 42%,rgba(18,14,10,.80) 0%,rgba(5,4,3,.96) 100%)}
+@keyframes gsfade{from{opacity:0}to{opacity:1}}
+@keyframes gsrise{from{opacity:0;transform:translate(-50%,-48%)}to{opacity:1;transform:translate(-50%,-50%)}}
+.gs-ov .card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);animation:gsrise .26s ease-out;
+  width:min(420px,calc(100vw - 32px));max-height:calc(100dvh - 32px);display:flex;flex-direction:column;padding:26px 30px 18px;box-sizing:border-box;
+  background:linear-gradient(180deg,var(--gs-card-a),var(--gs-card-b));border:1px solid color-mix(in srgb,var(--gs-accent) 42%,transparent);
+  box-shadow:inset 0 0 0 4px rgba(0,0,0,.45),inset 0 0 0 5px color-mix(in srgb,var(--gs-accent) 16%,transparent),inset 0 0 60px rgba(0,0,0,.55),0 30px 90px rgba(0,0,0,.7)}
+.gs-ov .card.wide{width:min(800px,calc(100vw - 32px));height:min(640px,calc(100dvh - 32px))}
+.gs-ov .cn{position:absolute;width:20px;height:20px;border:0 solid var(--gs-accent);pointer-events:none}
+.gs-ov .cn.a{left:-1px;top:-1px;border-left-width:2px;border-top-width:2px}
+.gs-ov .cn.b{right:-1px;top:-1px;border-right-width:2px;border-top-width:2px}
+.gs-ov .cn.c{left:-1px;bottom:-1px;border-left-width:2px;border-bottom-width:2px}
+.gs-ov .cn.d{right:-1px;bottom:-1px;border-right-width:2px;border-bottom-width:2px}
+.gs-ov .cn::after{content:'';position:absolute;width:5px;height:5px;background:var(--gs-accent);transform:rotate(45deg)}
+.gs-ov .cn.a::after{left:3px;top:3px}.gs-ov .cn.b::after{right:3px;top:3px}.gs-ov .cn.c::after{left:3px;bottom:3px}.gs-ov .cn.d::after{right:3px;bottom:3px}
+.gs-ov .crest{display:block;margin:0 auto 6px;width:46px;height:54px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(255,211,122,.25))}
+.gs-ov .ttl{text-align:center;font:400 27px/1.1 var(--gs-display);letter-spacing:.34em;padding-left:.34em;
+  background:linear-gradient(180deg,#ffe7a8 0%,var(--gs-accent) 55%,var(--gs-accent-lo) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.gs-ov .sub{text-align:center;font-size:10px;letter-spacing:.42em;padding-left:.42em;color:var(--gs-dim);margin-top:6px;text-transform:uppercase}
+.gs-ov .rule{position:relative;height:1px;margin:16px 6px 14px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--gs-accent) 55%,transparent),transparent)}
+.gs-ov .rule::after{content:'';position:absolute;left:50%;top:-3px;width:7px;height:7px;margin-left:-3.5px;background:var(--gs-card-b);border:1px solid var(--gs-accent);transform:rotate(45deg)}
+.gs-ov .menu{overflow:auto}
+.gs-ov .it{position:relative;display:block;width:100%;margin:2px 0;padding:9px 0;font:inherit;font-size:13px;letter-spacing:.32em;text-indent:.32em;text-transform:uppercase;
+  background:transparent;color:var(--gs-item);border:0;cursor:pointer;text-align:center;transition:color .12s,background .12s}
+.gs-ov .it::before,.gs-ov .it::after{content:'';position:absolute;top:50%;width:6px;height:6px;margin-top:-3px;background:var(--gs-accent-hi);transform:rotate(45deg) scale(0);transition:transform .14s}
+.gs-ov .it::before{left:22%}.gs-ov .it::after{right:22%}
+.gs-ov .it.f{color:#ffe0a0;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--gs-accent) 14%,transparent),transparent)}
+.gs-ov .it.f::before,.gs-ov .it.f::after{transform:rotate(45deg) scale(1)}
+.gs-ov .it.dis{opacity:.32;cursor:default}
+.gs-ov .it.danger.f{color:var(--gs-danger)}.gs-ov .it.danger.f::before,.gs-ov .it.danger.f::after{background:var(--gs-danger-dot)}
+.gs-ov .stat{text-align:center;color:var(--gs-dim);font-size:11px;letter-spacing:.08em;margin-top:12px;min-height:17px}
+.gs-ov .flash{text-align:center;color:var(--gs-accent-hi);font-size:11px;letter-spacing:.14em;min-height:17px;transition:opacity .4s}
+.gs-ov .keys{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 14px;margin-top:12px;padding-top:10px;border-top:1px solid color-mix(in srgb,var(--gs-accent) 14%,transparent);color:var(--gs-dim2);font-size:10px;letter-spacing:.1em}
+.gs-ov kbd,.gs-load kbd{display:inline-block;min-width:14px;padding:0 5px;margin-right:4px;border:1px solid var(--gs-kbd-line);border-bottom-width:2px;border-radius:3px;color:var(--gs-ink2);background:var(--gs-kbd-bg);font:10px/16px var(--gs-font);text-align:center}
+.gs-ov kbd.pb{border-radius:9px;min-width:12px;font-weight:600}
+.gs-ov .hd{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.gs-ov .hd .ttl{font-size:21px;text-align:left;padding-left:0}
+.gs-ov .hd .back{font:inherit;font-size:11px;letter-spacing:.2em;color:var(--gs-dim);background:none;border:0;cursor:pointer;min-height:32px}
+.gs-ov .hd .back:hover{color:var(--gs-accent-hi)}
+.gs-ov .tabs{display:flex;gap:2px;margin:16px 0 4px;border-bottom:1px solid color-mix(in srgb,var(--gs-accent) 22%,transparent);position:relative}
+.gs-ov .tab{flex:1;padding:9px 4px 8px;font:inherit;font-size:12px;letter-spacing:.26em;text-indent:.26em;color:var(--gs-dim);background:none;border:0;cursor:pointer;position:relative}
+.gs-ov .tab:hover{color:var(--gs-ink2)}
+.gs-ov .tab.on{color:var(--gs-accent-hi)}
+.gs-ov .tab.on::after{content:'';position:absolute;left:18%;right:18%;bottom:-1px;height:2px;background:linear-gradient(90deg,transparent,var(--gs-accent-hi),transparent)}
+.gs-ov .tabs.f .tab.on{text-shadow:0 0 12px rgba(255,211,122,.55)}
+.gs-ov .tabs.f::before{content:'';position:absolute;left:-14px;top:50%;width:6px;height:6px;margin-top:-5px;background:var(--gs-accent-hi);transform:rotate(45deg)}
+.gs-ov .tabs .tglyph{align-self:center;display:none}
+.gs-pad .gs-ov .tabs .tglyph{display:inline-block}
+.gs-ov .body{flex:1;overflow:auto;margin:6px -10px 0;padding:4px 10px 8px;scrollbar-width:thin;scrollbar-color:var(--gs-kbd-line) transparent}
+.gs-ov .row{display:grid;grid-template-columns:minmax(150px,210px) 1fr 132px;align-items:center;gap:14px;padding:9px 12px;margin:1px 0;border-left:2px solid transparent;transition:background .12s}
+.gs-ov .row.f{background:linear-gradient(90deg,color-mix(in srgb,var(--gs-accent) 13%,transparent),color-mix(in srgb,var(--gs-accent) 2%,transparent));border-left-color:var(--gs-accent-hi)}
+.gs-ov .row .lb{color:var(--gs-ink2);letter-spacing:.06em}
+.gs-ov .row.f .lb{color:#ffe0a0}
+.gs-ov .row .hint{display:block;color:var(--gs-dim2);font-size:10px;letter-spacing:.04em;margin-top:1px}
+.gs-ov .row .val{text-align:right;color:var(--gs-accent-hi);font-size:12px;white-space:nowrap}
+.gs-ov .row.dis{opacity:.4}
+.gs-ov .grp{margin:14px 12px 4px;color:var(--gs-accent-lo);font-size:10px;letter-spacing:.34em;text-transform:uppercase}
+.gs-ov .grp:first-child{margin-top:4px}
+.gs-ov .badge{display:inline-block;margin-left:8px;padding:0 6px;border:1px solid #7a5a2a;border-radius:2px;color:#e0a860;font-size:9px;letter-spacing:.14em;vertical-align:1px}
+.gs-ov .seg{display:flex;flex-wrap:wrap;gap:4px}
+.gs-ov .seg button{flex:1;min-width:52px;padding:5px 8px;font:inherit;font-size:11px;letter-spacing:.12em;color:#a89a7c;background:var(--gs-seg-bg);border:1px solid var(--gs-seg-line);border-radius:2px;cursor:pointer}
+.gs-ov .seg button:hover{border-color:#6b5424;color:var(--gs-ink)}
+.gs-ov .seg button.on{color:#1a1208;background:linear-gradient(180deg,#ffe0a0,var(--gs-accent));border-color:var(--gs-accent-hi);font-weight:600}
+.gs-ov .seg button:disabled{opacity:.35;cursor:default}
+.gs-ov input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:20px;margin:0;background:transparent;cursor:pointer;--p:50%}
+.gs-ov input[type=range]:focus{outline:none}
+.gs-ov input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--gs-accent) 0%,var(--gs-accent-hi) var(--p),#241e15 var(--p));box-shadow:inset 0 1px 2px #000,0 0 0 1px color-mix(in srgb,var(--gs-accent) 18%,transparent)}
+.gs-ov input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;margin-top:-4.5px;background:var(--gs-accent-hi);border:1px solid #6b5424;transform:rotate(45deg);box-shadow:0 0 9px rgba(255,211,122,.5)}
+.gs-ov input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:#241e15}
+.gs-ov input[type=range]::-moz-range-progress{height:4px;background:var(--gs-accent-hi)}
+.gs-ov input[type=range]::-moz-range-thumb{width:11px;height:11px;background:var(--gs-accent-hi);border:1px solid #6b5424;border-radius:0;transform:rotate(45deg)}
+.gs-ov .note{margin:12px 12px 2px;padding:10px 12px;border:1px solid rgba(224,168,96,.35);background:rgba(60,38,14,.35);color:#d8b27a;font-size:11px;line-height:1.6}
+.gs-ov .ctl{padding:0 6px}
+.gs-ov .ctl .k{display:grid;grid-template-columns:1fr 210px 170px;align-items:center;gap:10px;padding:5px 6px;border-bottom:1px dotted color-mix(in srgb,var(--gs-accent) 12%,transparent)}
+.gs-ov .ctl .k span{color:#c9bc9c;font-size:12px}
+.gs-ov .ctl .k b{font-weight:400;white-space:nowrap}
+.gs-ov .ctl .k.hdr{border-bottom:1px solid color-mix(in srgb,var(--gs-accent) 25%,transparent)}
+.gs-ov .ctl .k.hdr b{color:var(--gs-accent-lo);font-size:10px;letter-spacing:.24em}
+.gs-ov .ctl .na{color:var(--gs-dim2)}
+.gs-ov .ctl .grp{margin-left:0}
+.gs-ov .confirm{text-align:center}
+.gs-ov .confirm p{color:var(--gs-item);margin:4px 6px 14px;line-height:1.7}
+/* glyphs: the key strip shows the device you are using (body.gs-pad = controller, body.gs-touch = no strip) */
+.gs-ov .g-pad,.gs-load .g-pad{display:none}
+.gs-pad .gs-ov .g-pad,.gs-pad .gs-load .g-pad{display:inline}
+.gs-pad .gs-ov .g-kbd,.gs-pad .gs-load .g-kbd{display:none}
+.gs-touch .gs-ov .keys{display:none}
+@media (max-width:620px){.gs-ov .row{grid-template-columns:1fr;gap:6px}.gs-ov .row .val{text-align:left}.gs-ov .ctl .k{grid-template-columns:1fr 1fr}.gs-ov .ctl .k b:last-child{grid-column:2}}
+@media (max-height:520px){.gs-ov .card{padding:12px 22px 8px}.gs-ov .crest{display:none}.gs-ov .rule{margin:6px 6px}.gs-ov .it{padding:5px 0;min-height:32px}.gs-ov .ttl{font-size:20px}.gs-ov .sub{display:none}.gs-ov .stat{margin-top:4px}.gs-ov .keys{margin-top:6px;padding-top:6px}}
+@media (pointer:coarse){.gs-ov .it{min-height:42px}.gs-ov .seg button{min-height:36px}.gs-ov .tab{min-height:40px}}
+@media (pointer:coarse) and (max-height:520px){.gs-ov .it{min-height:34px}}
+
+/* ── loading screen ──────────────────────────────────────────────────────────────────────────────── */
+.gs-load{position:fixed;inset:0;z-index:calc(var(--gs-z) + 4);display:none;place-items:center;background:var(--gs-load-bg);color:var(--gs-ink);
+  font:13px/1.55 var(--gs-font);transition:opacity .6s}
+.gs-load.on{display:grid}
+.gs-load .gs-art{position:absolute;inset:0;background:center/cover no-repeat;opacity:.35;filter:blur(2px) saturate(.8)}
+.gs-load .box{position:relative;text-align:center;width:min(420px,80vw)}
+.gs-load .ttl{font:400 22px/1.2 var(--gs-display);letter-spacing:.3em;padding-left:.3em;color:var(--gs-accent);margin-bottom:14px}
+.gs-load .msg{letter-spacing:.12em;font-size:12px;color:var(--gs-ink2);min-height:1.6em}
+.gs-load .bar{height:4px;margin:10px auto 0;border-radius:2px;background:#ffffff1a;overflow:hidden}
+.gs-load .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gs-accent),var(--gs-accent-hi));transition:width .2s}
+.gs-load .tip{margin-top:18px;font-size:11px;color:var(--gs-dim);letter-spacing:.06em;min-height:1.6em}
+
+/* info card (credits) */
+.gs-ov .body.info{padding:6px 16px 12px;line-height:1.6;color:var(--gs-ink2);font-size:12px;user-select:text;-webkit-user-select:text}
+.gs-ov .body.info h3{color:var(--gs-accent);font-weight:400;letter-spacing:.12em;margin:16px 0 4px;font-size:12px;text-transform:uppercase}
+.gs-ov .body.info a{color:#cfe3f0}
+
+/* touch pause button: top right (where GameKit tiers' gear sat). Move it with theme '--gs-pause-top' / '--gs-pause-right' */
+.gs-pausebtn{position:fixed;z-index:calc(var(--gs-z) - 1);right:var(--gs-pause-right,calc(10px + env(safe-area-inset-right)));top:var(--gs-pause-top,calc(10px + env(safe-area-inset-top)));width:44px;height:44px;border-radius:50%;
+  border:1px solid color-mix(in srgb,var(--gs-accent) 55%,transparent);background:rgba(10,14,20,.55);display:flex;align-items:center;justify-content:center;gap:5px;padding:0;cursor:pointer}
+.gs-pausebtn[hidden]{display:none}
+.gs-pausebtn i{display:block;width:4px;height:16px;border-radius:1px;background:var(--gs-ink)}
+
+/* ── fps readout (Show FPS) ──────────────────────────────────────────────────────────────────────── */
+.gs-fps{position:fixed;left:calc(8px + env(safe-area-inset-left));top:calc(6px + env(safe-area-inset-top));z-index:2147483000;display:none;
+  font:12px/1.3 ui-monospace,monospace;color:#bfe3a0;background:rgba(0,0,0,.55);padding:2px 6px;border-radius:4px;pointer-events:none}

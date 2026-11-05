@@ -10,6 +10,7 @@ import { unlockAudio, sfx } from './audio.js';
 import { store, save, resetStats } from './store.js';
 import { Solitaire } from './solitaire.js';
 import { Blackjack } from './blackjack.js';
+import GameShell from '../vendor/gamekit-shell.js';   // GameKit shell: pause card, Settings, Controls, pad menus (mounted below)
 
 const $ = (s) => document.querySelector(s);
 const mobile = matchMedia('(pointer: coarse)').matches;
@@ -224,6 +225,7 @@ function titleAction(act) {
     store.settings.deck = eds[(i + 1) % eds.length].id; save(); syncTitleButtons(); setEdition(store.settings.deck); titleBox.skin(store.settings.deck); sfx.tap();
   }
   else if (act === 'sound') { store.settings.sound = !store.settings.sound; save(); syncTitleButtons(); sfx.tap(); }
+  else if (act === 'settings') { sfx.tap(); shell.settings.open(null, { standalone: true }); }
   else if (act === 'stats') app.modal('Stats', statsHtml(), [
     { label: 'Close', primary: true },
     { label: 'Reset', run: () => app.modal('Reset stats?', '<p>Clears both games and resets the bank to 500.</p>', [{ label: 'Reset', primary: true, run: () => { resetStats(); app.toast('Stats reset'); } }, { label: 'Cancel' }]) },
@@ -232,6 +234,7 @@ function titleAction(act) {
 document.addEventListener('click', (e) => {
   const b = e.target.closest('.btn[data-act]'); if (!b) return;
   unlockAudio();
+  if (b.dataset.act === 'menu' && current) return shell.pause.open();   // the HUD's Menu button = the pause card
   if (!$('#title').hidden) titleAction(b.dataset.act);
   else current?.action(b.dataset.act, b);
 });
@@ -279,14 +282,15 @@ function padAction(a) {
   unlockAudio(); usingPad = true;
   const menuMode = !$('#modal').hidden || !$('#title').hidden;
   if (!menuMode && current?.pad?.(a)) return;
-  if (a === 'start' && !menuMode) return show('title');
+  if (a === 'start' && !menuMode) return shell.pause.open();   // Start / M in a game = the pause card (the shell usually takes it first)
   if (['up', 'down', 'left', 'right'].includes(a)) return moveFocus(a);
   if (a === 'a') { if (focusEl && focusables().includes(focusEl)) focusEl.click(); else focusFirst(); }
   if (a === 'b' && !$('#modal').hidden) closeModal();
 }
 const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', Enter: 'a', ' ': 'a', Escape: 'b', Backspace: 'b',
   z: 'lb', u: 'lb', d: 'y', x: 'x', h: 'rb', m: 'start', s: 'x', w: 'y' };
-addEventListener('keydown', (e) => { const a = KEYS[e.key]; if (!a) return; e.preventDefault(); if (!e.repeat || ['up', 'down', 'left', 'right'].includes(a)) padAction(a); });
+addEventListener('keydown', (e) => { if (shell.busy() || (e.key === 'Escape' && canPause())) return;   // the shell has these keys
+  const a = KEYS[e.key]; if (!a) return; e.preventDefault(); if (!e.repeat || ['up', 'down', 'left', 'right'].includes(a)) padAction(a); });
 
 // Standard mapping (Xbox layout; the Steam Controller shows up this way when Chrome is launched from Steam).
 const BTN = { 0: 'a', 1: 'b', 2: 'x', 3: 'y', 4: 'lb', 5: 'rb', 8: 'select', 9: 'start', 12: 'up', 13: 'down', 14: 'left', 15: 'right' };
@@ -296,7 +300,9 @@ function pollPads(now) {
   for (const p of pads) {
     if (!p) continue;
     const prev = padPrev[p.index] || (padPrev[p.index] = []);
-    for (const [i, a] of Object.entries(BTN)) { const down = !!p.buttons[i]?.pressed; if (down && !prev[i]) padAction(a); prev[i] = down; }
+    const busy = shell.busy();   // a shell card reads the pad itself: keep the edges current, act on none
+    for (const [i, a] of Object.entries(BTN)) { const down = !!p.buttons[i]?.pressed; if (down && !prev[i] && !busy) padAction(a); prev[i] = down; }
+    if (busy) { const bx = p.axes[0] || 0, by = p.axes[1] || 0; stickDir = Math.hypot(bx, by) < 0.55 ? null : Math.abs(bx) > Math.abs(by) ? (bx > 0 ? 'right' : 'left') : (by > 0 ? 'down' : 'up'); continue; }
     const [ax, ay] = [p.axes[0] || 0, p.axes[1] || 0];
     const dir = Math.hypot(ax, ay) < 0.55 ? null : Math.abs(ax) > Math.abs(ay) ? (ax > 0 ? 'right' : 'left') : (ay > 0 ? 'down' : 'up');
     if (dir !== stickDir) { stickDir = dir; if (dir) { padAction(dir); stickNext = now + 320; } }
@@ -304,6 +310,42 @@ function pollPads(now) {
   }
 }
 addEventListener('gamepadconnected', (e) => app.toast(`Controller connected: ${e.gamepad.id.split('(')[0].trim()}`, 2400));
+
+// ---------- product shell: pause card, Settings, Controls (GameKit/shell) ----------
+// The title stays the game's own (the brick of tucks is the menu); the shell adds the pause card, Settings and Controls.
+let shellPaused = false;
+const canPause = () => !!current && $('#modal').hidden;
+const clock = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+const shell = GameShell.mount({
+  id: 'palmtree', title: 'Palm Tree', titleScreen: false, accent: '#f5c364',
+  theme: { '--gs-font': '"Nunito Sans", system-ui, sans-serif', '--gs-display': '"Pacifico", "Brush Script MT", cursive', '--gs-title-track': '1px',
+    '--gs-card-a': 'rgba(0,42,79,.95)', '--gs-card-b': 'rgba(0,27,51,.97)', '--gs-seg-bg': '#001b33', '--gs-seg-line': '#1d4166', '--gs-kbd-bg': '#00213f', '--gs-kbd-line': '#1d4166' },   // the game's midnight panel
+  save: { key: 'palmtree.shell.save', version: 1 },   // stats and bankroll stay in the game's own store (palmtree-cards-v1)
+  canPause,
+  onPause: (on) => {   // paused: the win cascade holds and the solitaire clock stops (t0 moves on by the paused time)
+    const sol = games.sol; if (on) shellPaused = performance.now(); else { if (sol && sol.t0 && shellPaused) sol.t0 += performance.now() - shellPaused; shellPaused = false; } needRender = true; },
+  pauseTitle: 'Palm Tree', pauseSubtitle: 'playing cards',
+  pauseMenu: ['resume',
+    { id: 'newdeal', label: 'New deal', show: () => current === games.sol, act: () => { shell.pause.close(); games.sol.confirmNew(); } },
+    { id: 'stats', label: 'Stats', act: () => shell.info({ title: 'Stats', html: statsHtml() }) },
+    'settings', 'controls',
+    { id: 'quit', label: 'Back to the box', act: () => { shell.pause.close(); show('title'); } }],
+  stat: () => current === games.sol ? `Solitaire · ${$('#solMoves').textContent} moves · ${$('#solTime').textContent}`
+    : current === games.bj ? `Blackjack · bank ${$('#bjBank').textContent} · bet ${$('#bjBet').textContent}` : '',
+  settings: {
+    audio(ui, body) { ui.choice(body, { label: 'Sound', hint: 'card sounds', opts: shell.ONOFF, get: () => !!store.settings.sound, set: (v) => { store.settings.sound = v; save(); syncTitleButtons(); } }); },
+  },
+  controls: [['Solitaire', [['Move the cursor', 'arrows', 'D-pad / LS'], ['Pick up / drop', 'Enter / Space', 'A'], ['Send to the best pile', 'X / S', 'X'], ['Draw', 'D / W', 'Y'],
+               ['Put the card back', 'Backspace', 'B'], ['Undo', 'Z / U', 'LB'], ['Hint', 'H', 'RB'], ['New deal', '', 'View']]],
+             ['Blackjack', [['Stand / clear the bet', 'X / S', 'X'], ['Double / deal', 'D / W', 'Y'], ['Bet - 5 / + 5', 'Z / H', 'LB / RB'], ['Buttons', 'arrows + Enter', 'D-pad + A']]],
+             ['Menus', [['Pause', 'Esc / M', 'Start']]]],
+  controlsNote: 'Touch: tap or drag the cards; Menu (top left) pauses.',
+});
+shell.settings.extend('gameplay', (ui, body) => {
+  ui.choice(body, { label: 'Deck', opts: editions().filter((e) => !e.concept).map((e) => [e.id, e.name]), get: () => store.settings.deck,
+    set: (v) => { store.settings.deck = v; save(); syncTitleButtons(); setEdition(v); titleBox.skin(v); needRender = true; } });
+  ui.choice(body, { label: 'Klondike draw', hint: 'from the next deal', opts: [[1, 'Draw 1'], [3, 'Draw 3']], get: () => store.settings.draw, set: (v) => { store.settings.draw = v; save(); } });
+});
 
 // ---------- loop ----------
 function resize() {
@@ -335,7 +377,7 @@ function frame(now) { requestAnimationFrame(frame); step(now); }
 function step(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   pollPads(now);
-  const moving = tick(now), upd = current?.update?.(dt);
+  const moving = tick(now), upd = shellPaused ? false : current?.update?.(dt);   // paused: the win cascade holds
   if (moving || upd || needRender) {
     renderer.render(scene, camera); needRender = false;
     placeLabels();
