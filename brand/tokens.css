@@ -1,0 +1,35 @@
+/* Palm Tree Playing Cards — design tokens · DESIGN.md v2.0 (2026-11-13)
+   Paste-ready. Pairs with DESIGN.md sections 2, 3, 7, 8. tokens.css is this block. */
+:root{
+  /* colour — measured print palette (DESIGN.md §2) */
+  --midnight:#012E4F; --midnight-deep:#011C2F; --midnight-lift:#103A59;
+  --hairline-dark:#1F4764; --ink-muted:#C0CBD1; --ink-black:#181818;
+  --tuck-ink:#1F273B; --tuck-ink-soft:#353C4E;
+  --lagoon:#39979F; --lagoon-print:#6AA2AA; --lagoon-deep:#257283; --lagoon-light:#6AB0B6;
+  --sun-gold:#E4BF6C; --sun-gold-light:#EBD197; --sun-gold-deep:#958C62;
+  --flamingo:#CF848E; --flamingo-light:#DDA8AE; --flamingo-deep:#916A7B;
+  --sand:#F2C167; --sand-light:#F5D393; --sand-deep:#AA9560;
+  --card-white:#FCFCFA; --card-white-95:#EFF2F1;
+  --court-red:#CC2229; /* card faces only — never brand UI */
+  /* type (DESIGN.md §3) */
+  --font-script:"Pacifico","Brush Script MT",cursive;
+  --font-display:"Lilita One","Arial Rounded MT Bold",system-ui,sans-serif;
+  --font-body:"Nunito Sans",system-ui,sans-serif;
+  --text-script-hero:64px; --text-script-title:44px; --text-script-tag:22px;
+  --text-display-xxl:72px; --text-display-xl:40px; --text-display-lg:32px; --text-display-md:24px;
+  --text-lead:21px; --text-body:17px; --text-button:15px; --text-button-lg:26px;
+  --text-small:14px; --text-caption:13px; --text-overline:12px;
+  /* space (DESIGN.md §7.2) */
+  --space-1:4px; --space-2:8px; --space-3:16px; --space-4:24px; --space-5:32px;
+  --space-6:48px; --space-7:64px; --space-8:96px; --space-9:128px;
+  /* radii (DESIGN.md §7.3; card radius = 4.7% of tile width) */
+  --radius-card:12px; --radius-tile:16px; --radius-panel:20px; --radius-round:999px;
+  /* elevation (DESIGN.md §7.4, game-measured) */
+  --shadow-push:0 3px 0 rgba(0,27,51,.35); --shadow-tile:0 8px 22px rgba(0,27,51,.5);
+  --shadow-panel:0 18px 50px rgba(0,27,51,.45); --shadow-float:0 10px 30px rgba(0,27,51,.45);
+  /* motion (DESIGN.md §8) */
+  --dur-tap:80ms; --dur-ui:150ms; --dur-deal:260ms; --dur-fan:500ms;
+  --dur-sunrise:1200ms; --dur-drift:8s; --stagger-shuffle:40ms;
+  --ease-out:cubic-bezier(.215,.61,.355,1); --ease-in:cubic-bezier(.55,.085,.68,.53);
+  --ease-pop:cubic-bezier(.3,1.6,.5,1); --ease-drift:cubic-bezier(.37,0,.63,1);
+}
