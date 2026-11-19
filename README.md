@@ -5,6 +5,15 @@ A small three.js card table using my own deck, Palm Tree Playing Cards (Kickstar
 
 **Play it:** https://seanmcmagic.github.io/palm-tree-cards/ (GitHub Pages, served from `master`; a push updates it in about a minute).
 
+![The title: Palm Tree Casino at night, with the deck's tuck boxes and uncut print sheets](docs/screenshots/desktop-title.jpg)
+
+| Solitaire | Blackjack | On a phone |
+|---|---|---|
+| ![Klondike Solitaire with the Palm Tree back and Daniel Schneider's court cards](docs/screenshots/desktop-solitaire.jpg) | ![Blackjack against the dealer, with the 2020 tuck box as the shoe](docs/screenshots/desktop-blackjack.jpg) | ![Solitaire on a phone in portrait](docs/screenshots/phone-solitaire.jpg) |
+
+*Court cards by [Daniel Schneider](https://blackroses.cards) (Black Roses), used with his permission. His art isn't
+in this repo, so a copy built from it (including the GitHub Pages link above) shows standard faces instead.*
+
 ## Run it
 
 ```
