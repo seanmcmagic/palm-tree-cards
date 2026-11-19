@@ -380,8 +380,8 @@ split-line courts, classic red/black/gold/blue on card-white. The printed courts
 licensed redraws — never copied, traced or restyled here. **What must not change in any future edition:**
 pips, courts, indices, suit colours, symmetry. `court-red` `#CC2229` exists only on the faces, never as
 a brand UI colour. **Licence note:** Daniel Schneider agreed to the faces' use in the game on
-2026-11-18. The game uses them by default, credited by name with a link to blackroses.cards; the art itself
-stays out of the public repo because he sells it.
+2026-11-18. The game uses them by default, credited by name with a link to blackroses.cards. The game-resolution
+sheets are in the repo; the print files are not.
 
 ### 5.6 Tuck and brick
 
@@ -943,7 +943,7 @@ units, minimum sizes, twelve misuse rules; §5 card and edition rules; §6 motif
 §11 token files (`tokens.json`, `tokens.css`).
 
 **Open items handed forward honestly:** (1) Daniel Schneider's faces: cleared for the game on
-2026-11-18 (credited; art kept out of the repo); (2) the game's `:root` still carries the v1-side
+2026-11-18 (credited; game sheets in the repo, print files not); (2) the game's `:root` still carries the v1-side
 tokens above — update it to §11 at the next build; (3) a standalone wordmark asset does not exist —
 make the crop per §4.3 before print collateral; (4) Winter Edition stays concept/commission only, never
 "for sale".
