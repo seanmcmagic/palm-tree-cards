@@ -76,15 +76,18 @@ export async function setEdition(id) {
 export async function loadManifest(renderer) {
   aniso = Math.min(4, renderer.capabilities.getMaxAnisotropy());
   try { const r = await fetch('art/manifest.json', { cache: 'no-store' }); if (r.ok) manifest = { editions: [], boxes: {}, ...(await r.json()) }; } catch (e) { /* procedural only */ }
-  // ?faces=schneider: Daniel Schneider's redrawn faces on the Original deck. Off by default and not in the public
-  // repo until he agrees; tools/build_art.py writes them to the git-ignored art/schneider/ on a local build only.
-  if (new URLSearchParams(location.search).get('faces') === 'schneider') {
+  // Daniel Schneider's redrawn faces are the default on the Original deck (he agreed on 2026-11-18). The art itself
+  // stays out of the public repo (he sells it at blackroses.cards): tools/build_art.py writes it to the git-ignored
+  // art/schneider/, so a clone without it falls back to the standard faces. ?faces=standard forces those.
+  if (new URLSearchParams(location.search).get('faces') !== 'standard') {
     try {
       const r = await fetch('art/schneider/faces.json', { cache: 'no-store' }), og = manifest.editions.find((e) => e.id === 'original');
-      if (r.ok && og) { const f = await r.json(); Object.assign(og, { sheet: f.sheet, faces: f.faces }); }
+      if (r.ok && og) { const f = await r.json(); Object.assign(og, { sheet: f.sheet, faces: f.faces }); schneider = true; }
     } catch (e) { /* not on this machine: standard faces */ }
   }
 }
+let schneider = false;
+export const schneiderFaces = () => schneider;   // true when Daniel's faces loaded (shows his credit)
 export async function initCards(id) { // waited for before any Card exists, so the first frame already has the real back
   ed = await load(editionDef(id));
 }

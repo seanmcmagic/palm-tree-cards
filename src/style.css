@@ -159,3 +159,5 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: var(--lagoon
   .banner { animation: none; }
   * { transition-duration: var(--dur-ui) !important; animation-duration: .01ms !important; }
 }
+
+.credit { margin: 10px 0 0; font-size: 12px; opacity: .75; text-align: center; } .credit a { color: inherit; }

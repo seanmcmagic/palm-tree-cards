@@ -94,8 +94,7 @@ which deck to print next. (The build still designs a matching back for each, in 
 
 **Casino night.** The title is a night room (`src/room.js`): a midnight wall with a gold lattice and rail, a neon
 "Palm Tree Casino" sign, marquee bulbs, and my uncut print sheets in gold frames (Original backs, Winter backs,
-Winter faces; built into `art/room/`). The Original faces sheet is Daniel Schneider's faces and stays off the wall
-until the licence covers digital use. Everything in the room is unlit, so it adds no lights. The title camera sits
+Winter faces; built into `art/room/`). The Original faces sheet (Daniel Schneider's faces) is not on the wall. Everything in the room is unlit, so it adds no lights. The title camera sits
 lower (64° from straight down) so the tuck fronts read; on wide screens it frames the sign too, and under the menu
 on a phone it keeps the box large with the wall behind.
 
@@ -112,9 +111,11 @@ game deals them. (`uspcc_files/jokers.jpg` is an earlier proof with one red Joke
 `#39979f`, midnight `#002a4f`, sunset-gold `#f5c364`, flamingo `#f0909c`, card-white `#fcfcfc`), and the script
 lettering is Pacifico, the deck's typeface.
 
-**The other faces in the print file are Daniel Schneider's licensed redraws** (blackroses.cards sells them as print
-templates). They stay out of the game until I confirm my licence covers digital use; the build script never reads
-pages 3 to 5 or any card on page 2 except the Ace of Spades.
+**The court cards are Daniel Schneider's redraws, used with his permission** (he agreed to game use on
+2026-11-18). His art is **not in this repo**: he sells it as print templates at
+[blackroses.cards](https://blackroses.cards), so `tools/build_art.py` cuts it from my print file into the git-ignored
+`art/schneider/` on my machine and into the builds I publish. A clone without that folder plays with the standard
+faces described below; `?faces=standard` forces them. The title and the pause menu's Credits name him with a link.
 
 **Faces** follow standard poker-deck conventions, not any particular deck's art: 180° rotational symmetry, corner
 indices top-left and bottom-right, standard pip grids with the lower half inverted, a split line on the courts, and
@@ -153,7 +154,7 @@ and the games pick it up with no other code. An edition entry:
 - **`faces`**: an object of single-card overrides (keys rank + suit, `A 2-10 J Q K` + `S H D C`), or `"sheet"` when every
   face is a sheet cell named by its key. Faces not listed come from `atlas`, then procedural.
 - **`joker`**: `null` means the edition has none (the set-aside Jokers hide); missing means the procedural Joker.
-- **`atlas`** is the slot for a licensed face set (empty until the Schneider licence is confirmed): one image in a
+- **`atlas`** is the slot for a licensed face set (Daniel Schneider's faces, built locally into `art/schneider/`): one image in a
   grid, one row per suit (`suits` order) and one column per rank (`ranks` order; leave it out for all 13), for example
   `{ "file": "faces_atlas.png", "suits": ["S", "H", "D", "C"], "ranks": ["J", "Q", "K"] }`. Each cell is a whole card
   at 5:7, with a few pixels of transparent margin.
