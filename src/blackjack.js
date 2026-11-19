@@ -78,7 +78,7 @@ export class Blackjack {
     this.discard.forEach((c, i) => c.place(DISCARD.x, 0.004 + i * 0.004, DISCARD.z, c.group.rotation.y));
     // A short landscape phone has its buttons in a column at the right (style.css): the table uses the full height,
     // framed from the dealer's total down to the bet ring, with the shoe moved down beside the dealer.
-    const rect = tall ? { x0: -2.65, x1: 2.65, z0: -4.5, z1: 3.6 } : short ? { x0: -4.1, x1: 4.1, z0: -3.15, z1: 3.4 } : { x0: -4.1, x1: 4.1, z0: -3.45, z1: 3.6 };
+    const rect = tall ? { x0: -2.65, x1: 2.65, z0: -4.5, z1: 3.6 } : short ? { x0: -4.1, x1: 4.1, z0: -3.15, z1: 3.8 } : { x0: -4.1, x1: 4.1, z0: -3.45, z1: 3.6 };
     this.app.fit(rect, 'center', short ? { top: 54, bottom: 4 } : {});
     this.labels();
   }

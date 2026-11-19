@@ -327,6 +327,7 @@ const shell = GameShell.mount({
   canPause,
   onPause: (on) => {   // paused: the win cascade holds and the solitaire clock stops (t0 moves on by the paused time)
     const sol = games.sol; if (on) shellPaused = performance.now(); else { if (sol && sol.t0 && shellPaused) sol.t0 += performance.now() - shellPaused; shellPaused = false; } needRender = true; },
+  pauseButton: false,   // each game has its own Menu button; the shell's round one covered New / Shoe on phones
   pauseTitle: 'Palm Tree', pauseSubtitle: 'playing cards',
   pauseMenu: ['resume',
     { id: 'newdeal', label: 'New deal', show: () => current === games.sol, act: () => { shell.pause.close(); games.sol.confirmNew(); } },

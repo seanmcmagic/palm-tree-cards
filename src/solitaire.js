@@ -72,7 +72,7 @@ export class Solitaire {
     // Room below the deal for long columns (they squeeze to fit what is there). A short landscape screen keeps less,
     // and its Undo / Hint column sits at the right edge (style.css), so the cards can use the full height.
     const short = innerWidth > innerHeight && innerHeight < 560;
-    const v = this.app.fit({ x0: colX(0) - 0.58, x1: colX(6) + 0.58, z0: TOPZ - CARD_H / 2 - 0.06, z1: TABZ + CARD_H / 2 + (short ? 1.7 : 3.6) }, 'top', short ? { bottom: 10 } : {});
+    const v = this.app.fit({ x0: colX(0) - 0.58, x1: colX(6) + 0.58, z0: TOPZ - CARD_H / 2 - 0.06, z1: TABZ + CARD_H / 2 + (short ? 2.1 : 3.6) }, 'top', short ? { bottom: 10 } : {});
     this.bottom = v.z1 - CARD_H / 2 - 0.08;
   }
   pos(c) { // resting pose for a card from the logical state
@@ -92,7 +92,7 @@ export class Solitaire {
     let up = 0.4, down = 0.22, nu = 0, nd = 0;
     for (let k = 0; k < col.length - 1; k++) col[k].up ? nu++ : nd++;
     const avail = Math.max(1, (this.bottom ?? 8) - TABZ), need = nu * up + nd * down;
-    if (need > avail) { const s = avail / need; up = Math.max(0.15, up * s); down = Math.max(0.07, down * s); }
+    if (need > avail) { const s = avail / need; up = Math.max(0.12, up * s); down = Math.max(0.05, down * s); }   // 0.12 still shows the rank; a full column fits a short landscape phone
     return { up, down };
   }
   place(c, opts = {}) { const [x, y, z] = this.pos(c); return c.moveTo(x, y, z, { faceUp: c.up, ...opts }); }
