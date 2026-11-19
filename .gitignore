@@ -2,5 +2,7 @@ node_modules/
 *.log
 .claude/
 art/source/
-art/schneider/
+art/schneider/*
+!art/schneider/faces.json
+!art/schneider/sheet_*.webp
 shots/

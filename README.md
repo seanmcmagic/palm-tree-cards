@@ -11,8 +11,7 @@ A small three.js card table using my own deck, Palm Tree Playing Cards (Kickstar
 |---|---|---|
 | ![Klondike Solitaire with the Palm Tree back and Daniel Schneider's court cards](docs/screenshots/desktop-solitaire.jpg) | ![Blackjack against the dealer, with the 2020 tuck box as the shoe](docs/screenshots/desktop-blackjack.jpg) | ![Solitaire on a phone in portrait](docs/screenshots/phone-solitaire.jpg) |
 
-*Court cards by [Daniel Schneider](https://blackroses.cards) (Black Roses), used with his permission. His art isn't
-in this repo, so a copy built from it (including the GitHub Pages link above) shows standard faces instead.*
+*Court cards by [Daniel Schneider](https://blackroses.cards) (Black Roses), used with his permission.*
 
 ## Run it
 
@@ -120,11 +119,10 @@ game deals them. (`uspcc_files/jokers.jpg` is an earlier proof with one red Joke
 `#39979f`, midnight `#002a4f`, sunset-gold `#f5c364`, flamingo `#f0909c`, card-white `#fcfcfc`), and the script
 lettering is Pacifico, the deck's typeface.
 
-**The court cards are Daniel Schneider's redraws, used with his permission** (he agreed to game use on
-2026-11-18). His art is **not in this repo**: he sells it as print templates at
-[blackroses.cards](https://blackroses.cards), so `tools/build_art.py` cuts it from my print file into the git-ignored
-`art/schneider/` on my machine and into the builds I publish. A clone without that folder plays with the standard
-faces described below; `?faces=standard` forces them. The title and the pause menu's Credits name him with a link.
+**The court cards are Daniel Schneider's redraws, used with his permission** (he agreed on 2026-11-18). The game
+sheets in `art/schneider/` (`sheet_hi.webp` 4096x2048, `sheet_lo.webp`) are cut from my print file by
+`tools/build_art.py`; they are game resolution only, and the print files stay out of this repo. His decks and print
+templates are at [blackroses.cards](https://blackroses.cards). `?faces=standard` plays with the standard faces below.
 
 **Faces** follow standard poker-deck conventions, not any particular deck's art: 180° rotational symmetry, corner
 indices top-left and bottom-right, standard pip grids with the lower half inverted, a split line on the courts, and

@@ -76,9 +76,9 @@ export async function setEdition(id) {
 export async function loadManifest(renderer) {
   aniso = Math.min(4, renderer.capabilities.getMaxAnisotropy());
   try { const r = await fetch('art/manifest.json', { cache: 'no-store' }); if (r.ok) manifest = { editions: [], boxes: {}, ...(await r.json()) }; } catch (e) { /* procedural only */ }
-  // Daniel Schneider's redrawn faces are the default on the Original deck (he agreed on 2026-11-18). The art itself
-  // stays out of the public repo (he sells it at blackroses.cards): tools/build_art.py writes it to the git-ignored
-  // art/schneider/, so a clone without it falls back to the standard faces. ?faces=standard forces those.
+  // Daniel Schneider's redrawn faces are the default on the Original deck (he agreed on 2026-11-18; credited on the
+  // title and in Credits). tools/build_art.py cuts them into art/schneider/; if that is missing, the standard faces
+  // are used. ?faces=standard forces those.
   if (new URLSearchParams(location.search).get('faces') !== 'standard') {
     try {
       const r = await fetch('art/schneider/faces.json', { cache: 'no-store' }), og = manifest.editions.find((e) => e.id === 'original');
